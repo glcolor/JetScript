@@ -16,6 +16,7 @@
 namespace Jet
 {
 	class JetContext;
+	class GarbageCollector;
 
 	/// <summary>
 	/// 值的类型
@@ -42,11 +43,12 @@ namespace Jet
 	template<class t>
 	struct GCVal
 	{
-		bool mark;
-		bool grey;
-		ValueType type : 8;
+		JetContext* context = nullptr;
+		bool		mark;
+		bool		grey;
+		ValueType	type : 8;
 		unsigned char refcount;//used for native functions
-		t data;
+		t			data;
 
 		GCVal() { }
 
@@ -101,6 +103,7 @@ namespace Jet
 			prototype = o;
 		}
 	};
+
 	typedef GCVal<char*> JetString;
 
 	typedef void _JetFunction;
@@ -256,8 +259,8 @@ namespace Jet
 		operator int()
 		{
 			if (type == ValueType::Int)		return (int)int_value;
-			if (type == ValueType::Real)	return (int)value;
-
+			else if (type == ValueType::Real)	return (int)value;
+			else if (type == ValueType::String) return atoi(_string->data);
 			throw RuntimeException("Cannot convert type " + (std::string)ValueTypes[(int)this->type] + " to int!");
 		}
 
@@ -265,7 +268,7 @@ namespace Jet
 		{
 			if (type == ValueType::Int)		return int_value;
 			if (type == ValueType::Real)	return (int64_t)value;
-
+			else if (type == ValueType::String) return _atoi64(_string->data);
 			throw RuntimeException("Cannot convert type " + (std::string)ValueTypes[(int)this->type] + " to int!");
 		}
 
@@ -273,6 +276,7 @@ namespace Jet
 		{
 			if (type == ValueType::Int)		return (double)int_value;
 			if (type == ValueType::Real)	return value;
+			else if (type == ValueType::String) return atof(_string->data);
 
 			throw RuntimeException("Cannot convert type " + (std::string)ValueTypes[(int)this->type] + " to real!");
 		}

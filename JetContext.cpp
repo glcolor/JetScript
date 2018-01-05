@@ -38,6 +38,26 @@ Value Jet::tostring(JetContext* context, Value* args, int numargs)
 	throw RuntimeException("Invalid tostring call");
 }
 
+
+Jet::Value Jet::toint(JetContext* context, Value* args, int numargs)
+{
+	if (numargs >= 1)
+	{
+		return Value((int64_t)*args);
+	}
+	throw RuntimeException("Invalid int call");
+}
+
+
+Jet::Value Jet::toreal(JetContext* context, Value* args, int numargs)
+{
+	if (numargs >= 1)
+	{
+		return Value((double)*args);
+	}
+	throw RuntimeException("Invalid real call");
+}
+
 Value JetContext::Callstack(JetContext* context, Value* args, int numargs)
 {
 	context->StackTrace(JET_BAD_INSTRUCTION, 0);
@@ -156,6 +176,7 @@ Value JetContext::NewString(const char* string, bool copy)
 	str->grey = str->mark = false;
 	str->refcount = 0;
 	str->type = ValueType::String;
+	str->context = this;
 	return Value(str);
 }
 
@@ -172,6 +193,9 @@ JetContext::JetContext() : gc(this), stack(500000), callstack(JET_MAX_CALLDEPTH,
 	(*this)["gc"] = ::gc;
 	(*this)["callstack"] = JetContext::Callstack;
 	(*this)["tostring"] = ::tostring;
+	(*this)["string"] = ::tostring;
+	(*this)["int"] = ::toint;
+	(*this)["real"] = ::toreal;
 	(*this)["pcall"] = [](JetContext* context, Value* args, int argc)
 	{
 		if (argc == 0)

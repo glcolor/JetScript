@@ -52,6 +52,8 @@ namespace Jet
 	Value gc(JetContext* context,Value* args, int numargs);
 	Value print(JetContext* context,Value* args, int numargs);
 	Value tostring(JetContext* context, Value* args, int numargs);
+	Value toint(JetContext* context, Value* args, int numargs);
+	Value toreal(JetContext* context, Value* args, int numargs);
 	
 	//信息输出函数
 	typedef int (__cdecl *OutputFunction) (const char* format, ...);

@@ -523,13 +523,32 @@ Value Value::operator+( const Value &other )
 			return Value((double)int_value + other.value);
 		else if (other.type == ValueType::Int)
 			return Value(int_value + other.int_value);
+		else if (other.type == ValueType::String)
+		{
+			if (other._string->context == nullptr) return *this;
+			std::string str = this->ToString() + std::string(other._string->data);
+			return other._string->context->NewString(str.c_str(), true);
+		}
 		break;
 	case ValueType::Real:
 		if (other.type == ValueType::Real)
 			return Value(value + other.value);
 		else if (other.type == ValueType::Int)
 			return Value(value + (double)other.int_value);
+		else if (other.type == ValueType::String)
+		{
+			if (other._string->context == nullptr) return *this;
+			std::string str = this->ToString() + std::string(other._string->data);
+			return other._string->context->NewString(str.c_str(), true);
+		}
 		break;
+	case ValueType::String:
+	{
+		if (this->_string->context == nullptr) return *this;
+		std::string str = std::string(this->_string->data) + other.ToString();
+		return this->_string->context->NewString(str.c_str(),true);
+		break;
+	}
 	case ValueType::Userdata:
 		if (this->_userdata->prototype)
 			return this->CallMetamethod(this->_userdata->prototype, "_add", &other);
