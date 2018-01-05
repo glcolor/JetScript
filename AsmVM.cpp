@@ -186,11 +186,11 @@ int main(int argc, char* argv[])
 				try
 				{
 					Value ret = tcontext.Script(
-						"fail = 0;"
+						"global fail = 0;"
 						"if (++5 != 6) fail = 1;"
 						"if (5++ != 5) fail = 1;"
-						"x = -5;"
-						"y = -5;"
+						"global x = -5;"
+						"global y = -5;"
 						"5++;"
 						"++5;"
 						"print(++x);"
@@ -234,7 +234,7 @@ int main(int argc, char* argv[])
 						"return x;"
 						"}"
 
-						"Point = struct(\"x\", \"y\");"
+						"global Point = struct(\"x\", \"y\");"
 						"local p1 = Point(1, 2);"
 						"print(p1.x, p1.y);"
 						"local p2 = Point(10, 20);"
@@ -248,8 +248,8 @@ int main(int argc, char* argv[])
 
 				try
 				{
-					Value out = tcontext.Script("x = { _call = fun(x,y,z) { return z; }};"
-						"y = {}; setprototype(y,x); return y(1,2,3);");
+					Value out = tcontext.Script("global x = { _call = fun(x,y,z) { return z; }};"
+						"global y = {}; setprototype(y,x); return y(1,2,3);");
 
 					if ((int)out != 3)
 						throw 7;
@@ -337,8 +337,8 @@ int main(int argc, char* argv[])
 				//loop test
 				try
 				{
-					tcontext.Script("x = [1,2,3,4,5];"
-						"z = [];"
+					tcontext.Script("global x = [1,2,3,4,5];"
+						"global z = [];"
 						"for (local i in x)"
 						"	z:add(i);");
 					if ((int)tcontext["z"][(int64_t)0] != 1)
@@ -346,8 +346,8 @@ int main(int argc, char* argv[])
 					if ((int)tcontext["z"][(int64_t)4] != 5)
 						throw 7;
 
-					tcontext.Script("x = {a=1,b=2.0,c=3,d=4,e=5};"
-						"z = [];"
+					tcontext.Script("global x = {a=1,b=2.0,c=3,d=4,e=5};"
+						"global z = [];"
 						"print(x);"
 						"for (var i in x) {"
 						" print(i);"

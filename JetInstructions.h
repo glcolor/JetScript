@@ -1,9 +1,13 @@
 #ifndef _JET_INSTRUCTIONS_HEADER
 #define _JET_INSTRUCTIONS_HEADER
 
+//if FORCE_USING_GLOBAL be set to 1,all global vars must be declared by 'global',for example: global x=0.0;
+#define  FORCE_USING_GLOBAL 0
+
 namespace Jet
 {
-	const static char* Instructions[] = {
+	const static char* Instructions[] = 
+	{
 		"Add",
 		"Mul",
 		"Div",
@@ -75,6 +79,7 @@ namespace Jet
 		"DebugLine",
 		"Function"
 	};
+
 	enum class InstructionType
 	{
 		Add, Mul, Div, Sub, Modulus,

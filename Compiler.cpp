@@ -334,7 +334,7 @@ void CompilerContext::Load(const std::string& variable)
 	int level = 0;
 	auto cur = this->parent;
 	auto prev = this;
-	while(cur)
+	while (cur)
 	{
 		ptr = cur->scope;
 		while (ptr)
@@ -363,6 +363,7 @@ void CompilerContext::Load(const std::string& variable)
 		prev = cur;
 		cur = cur->parent;
 	}
+
 	out.push_back(IntermediateInstruction(InstructionType::Load, variable));
 }
 
@@ -417,11 +418,13 @@ void CompilerContext::Store(const std::string& variable)
 		prev = cur;
 		cur = cur->parent;
 	}
+	globalvars.insert(variable);
 	out.push_back(IntermediateInstruction(InstructionType::Store, variable));
 }
 
 void Jet::CompilerContext::StoreGlobal(const std::string& variable)
 {
+	globalvars.insert(variable);
 	out.push_back(IntermediateInstruction(InstructionType::Store, variable));
 }
 

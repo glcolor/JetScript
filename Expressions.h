@@ -69,7 +69,23 @@ namespace Jet
 
 		void CompileStore(CompilerContext* context)
 		{
+#if FORCE_USING_GLOBAL
+			if (context->IsLocal(name))
+			{
+				context->Store(name);
+			}
+			else if(context->IsGlobal(name))
+			{
+				context->Store(name);
+			}
+			else
+			{
+				context->RegisterLocal(name);
+				context->Store(name);
+			}
+#else
 			context->Store(name);
+#endif			
 		}
 	};
 

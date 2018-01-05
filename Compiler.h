@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_set>
 #include <stdint.h>
 
 #include "Token.h"
@@ -137,6 +138,9 @@ namespace Jet
 		};
 		Scope* scope;//linked list starting at current scope
 
+		// global vars
+		std::unordered_set<std::string>			globalvars;
+
 		unsigned int localindex;//next open local index
 
 		bool vararg; bool isgenerator;
@@ -159,7 +163,6 @@ namespace Jet
 		void FinalizeFunction(CompilerContext* c);
 
 		std::vector<IntermediateInstruction> Compile(BlockExpression* expr, const char* filename);
-
 	private:
 		void Compile()
 		{
@@ -373,6 +376,11 @@ namespace Jet
 				cur = cur->parent;
 			}
 			return false;
+		}
+
+		bool IsGlobal(const std::string& name)
+		{
+			return globalvars.find(name) != globalvars.end();
 		}
 
 		void LoadFunction(const std::string& name)

@@ -37,9 +37,6 @@
 #define JET_STACK_SIZE 800
 #define JET_MAX_CALLDEPTH 400
 
-//全局变量必须用global来声明才能被使用
-#define  FORCE_USING_GLOBAL 0
-
 namespace Jet
 {
 	typedef std::function<void(Jet::JetContext*,Jet::Value*,int)> JetFunction;

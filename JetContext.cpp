@@ -1969,14 +1969,9 @@ Value JetContext::Assemble(const std::vector<IntermediateInstruction>& code)
 					{
 						if (variables.find(inst.string) == variables.end())
 						{
-#if FORCE_USING_GLOBAL
-							//如果全局变量必须事先声明，则抛出运行时异常
-							throw RuntimeException("ERROR:Variable " + std::string(inst.string) + " Not Exists.\n");
-#else
 							//添加全局变量
 							variables[inst.string] = variables.size();
 							vars.push_back(Value());
-#endif
 						}
 						ins.value = variables[inst.string];
 						delete[] inst.string;
