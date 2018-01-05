@@ -269,61 +269,52 @@ Expression* ReturnParselet::parse(Parser* parser, Token token)
 
 Expression* LocalParselet::parse(Parser* parser, Token token)
 {
-	UniquePtr<std::vector<Token>*> names = new std::vector<Token>;
+	UniquePtr<std::vector<VarDefine>*> names = new std::vector<VarDefine>;
 
 	do
 	{
-		Token name = parser->Consume(TokenType::Name);
-		names->push_back(name);
-	}
-	while (parser->MatchAndConsume(TokenType::Comma));
-
-	parser->Consume(TokenType::Assign);//its possible this wont be here and it may just be a mentioning, but no assignment
-
-	//handle multiple comma expressions
-	UniquePtr<std::vector<Expression*>*> rights = new std::vector<Expression*>;
-	do
-	{
-		Expression* right = parser->parseExpression(Precedence::ASSIGNMENT-1/*assignment prcedence -1 */);
-
-		rights->push_back(right);
-	}
-	while (parser->MatchAndConsume(TokenType::Comma));
+		VarDefine vd;
+		vd.m_Name = parser->Consume(TokenType::Name);
+		if (parser->MatchAndConsume(TokenType::Assign))
+		{
+			//变量赋初值
+			vd.m_Experssion = parser->parseExpression(Precedence::ASSIGNMENT - 1/*assignment prcedence -1 */);
+		}
+		names->push_back(vd);
+	} while (parser->MatchAndConsume(TokenType::Comma));
 
 	parser->Consume(TokenType::Semicolon);
 
-	return new LocalExpression(names.Release(), rights.Release());
+	return new LocalExpression(names.Release());
+}
+
+
+Expression* Jet::GlobalParselet::parse(Parser* parser, Token token)
+{
+	UniquePtr<std::vector<VarDefine>*> names = new std::vector<VarDefine>;
+
+	do
+	{
+		VarDefine vd;
+		vd.m_Name = parser->Consume(TokenType::Name);
+		if (parser->MatchAndConsume(TokenType::Assign))
+		{
+			//变量赋初值
+			vd.m_Experssion = parser->parseExpression(Precedence::ASSIGNMENT - 1/*assignment prcedence -1 */);
+		}
+		names->push_back(vd);
+	} while (parser->MatchAndConsume(TokenType::Comma));
+
+	parser->Consume(TokenType::Semicolon);
+
+	return new GlobalExpression(names.Release());
 }
 
 Expression* ConstParselet::parse(Parser* parser, Token token)
 {
 	throw CompilerException("", 0, "Const keyword not implemented!");
 
-	std::vector<Token>* names = new std::vector<Token>;
-	do
-	{
-		Token name = parser->Consume(TokenType::Name);
-		names->push_back(name);
-	}
-	while (parser->MatchAndConsume(TokenType::Comma));
-
-	parser->Consume(TokenType::Assign);//its possible this wont be here and it may just be a mentioning, but no assignment
-
-	//do somethign with multiple comma expressions
-	std::vector<Expression*>* rights = new std::vector<Expression*>;
-	do
-	{
-		Expression* right = parser->parseExpression(Precedence::ASSIGNMENT-1/*assignment prcedence -1 */);
-
-		rights->push_back(right);
-	}
-	while (parser->MatchAndConsume(TokenType::Comma));
-
-	parser->Consume(TokenType::Semicolon);
-	//do stuff with this and store and what not
-	//need to add this variable to this's block expression
-
-	return new LocalExpression(names, rights);
+	return nullptr;
 }
 
 Expression* ArrayParselet::parse(Parser* parser, Token token)
@@ -376,7 +367,7 @@ Expression* ObjectParselet::parse(Parser* parser, Token token)
 
 	//parse initial values
 	std::vector<std::pair<std::string, Expression*>>* inits = new std::vector<std::pair<std::string, Expression*>>;
-	while(parser->LookAhead().type == TokenType::Name || parser->LookAhead().type == TokenType::String || parser->LookAhead().type == TokenType::Number)
+	while (parser->LookAhead().type == TokenType::Name || parser->LookAhead().type == TokenType::String || parser->LookAhead().type == TokenType::IntNumber || parser->LookAhead().type == TokenType::RealNumber)
 	{
 		Token name = parser->Consume();
 

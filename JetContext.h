@@ -37,19 +37,25 @@
 #define JET_STACK_SIZE 800
 #define JET_MAX_CALLDEPTH 400
 
+//全局变量必须用global来声明才能被使用
+#define  FORCE_USING_GLOBAL 0
+
 namespace Jet
 {
 	typedef std::function<void(Jet::JetContext*,Jet::Value*,int)> JetFunction;
 #define JetBind(context, fun) 	auto temp__bind_##fun = [](Jet::JetContext* context,Jet::Value* args, int numargs) { return Value(fun(args[0]));};context[#fun] = Jet::Value(temp__bind_##fun);
 	//void(*temp__bind_##fun)(Jet::JetContext*,Jet::Value*,int)> temp__bind_##fun = &[](Jet::JetContext* context,Jet::Value* args, int numargs) { context->Return(fun(args[0]));}; context[#fun] = &temp__bind_##fun;
 #define JetBind2(context, fun) 	auto temp__bind_##fun = [](Jet::JetContext* context,Jet::Value* args, int numargs) {  return Value(fun(args[0],args[1]));};context[#fun] = Jet::Value(temp__bind_##fun);
-#define JetBind2(context, fun, type) 	auto temp__bind_##fun = [](Jet::JetContext* context,Jet::Value* args, int numargs) {  return Value(fun((type)args[0],(type)args[1]));};context[#fun] = Jet::Value(temp__bind_##fun);
+#define JetBind3(context, fun, type) 	auto temp__bind_##fun = [](Jet::JetContext* context,Jet::Value* args, int numargs) {  return Value(fun((type)args[0],(type)args[1]));};context[#fun] = Jet::Value(temp__bind_##fun);
 
 	//builtin function definitions
 	Value gc(JetContext* context,Value* args, int numargs);
 	Value print(JetContext* context,Value* args, int numargs);
 	Value tostring(JetContext* context, Value* args, int numargs);
 	
+	//信息输出函数
+	typedef int (__cdecl *OutputFunction) (const char* format, ...);
+
 	class JetContext
 	{
 		friend struct Generator;
@@ -115,31 +121,33 @@ namespace Jet
 		~JetContext();
 
 		//allows assignment and reading of gobal variables
-		Value& operator[](const std::string& id);
-		Value Get(const std::string& name);
-		void Set(const std::string& name, const Value& value);
+		Value&	operator[](const std::string& id);
+		Value	Get(const std::string& name);
+		void	Set(const std::string& name, const Value& value);
 
-		std::string Script(const std::string code, const std::string filename = "file");
-		Value Script(const char* code, const char* filename = "file");//compiles, assembles and executes the script
+		std::string Script(const std::string& code, const std::string& filename = "file");
+		Value		Script(const char* code, const char* filename = "file");//compiles, assembles and executes the script
 
 
 		//compiles source code to ASM for the VM to read in
 		std::vector<IntermediateInstruction> Compile(const char* code, const char* filename = "file");
 
 		//parses in ASM, returns a function
-		Value Assemble(const std::vector<IntermediateInstruction>& code);
+		Value	Assemble(const std::vector<IntermediateInstruction>& code);
 
 		//executes a function in the VM context
-		Value Call(const char* function, Value* args = 0, unsigned int numargs = 0);
-		Value Call(const Value* function, Value* args = 0, unsigned int numargs = 0);
+		Value	Call(const char* function, Value* args = 0, unsigned int numargs = 0);
+		Value	Call(const Value* function, Value* args = 0, unsigned int numargs = 0);
 
-		void RunGC();//runs an iteration of the garbage collector
+		void	RunGC();//runs an iteration of the garbage collector
 
+		OutputFunction GetOutputFunction() const		{ return m_OutputFunction; }
+		void	SetOutputFunction(OutputFunction val);
 	private:
 		Value* sptr;//stack pointer
 		Closure* curframe;
 		Value localstack[JET_STACK_SIZE];
-
+		OutputFunction	m_OutputFunction = printf;
 		//begin executing instructions at iptr index
 		Value Execute(int iptr, Closure* frame);
 		unsigned int Call(const Value* function, unsigned int iptr, unsigned int args);//used for calls in the VM

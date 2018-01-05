@@ -192,7 +192,6 @@ void GarbageCollector::Mark()
 
 	if (context->stack.size() > 0)
 	{
-		//StackProfile prof("Make Stack Grey");
 		for (unsigned int i = 0; i < context->stack.size(); i++)
 		{
 			if (context->stack.mem[i].type > ValueType::NativeFunction)
@@ -210,8 +209,6 @@ void GarbageCollector::Mark()
 	//this is really part of the sweep section
 	if (context->callstack.size() > 0)
 	{
-		//StackProfile prof("Traverse/Mark Stack");
-		//printf("GC run at runtime!\n");
 		//traverse all local vars
 		if (context->curframe && context->curframe->grey == false)
 		{
@@ -329,7 +326,6 @@ void GarbageCollector::Mark()
 			case ValueType::Function:
 				{
 					obj._function->mark = true;
-					//printf("Function Marked\n");
 					if (obj._function->prev && obj._function->prev->grey == false)
 					{
 						obj._function->prev->grey = true;
@@ -400,13 +396,8 @@ void GarbageCollector::Sweep()
 {
 	bool nextIncremental = ((this->collectionCounter+1)%GC_STEPS)!=0;
 	bool incremental = ((this->collectionCounter)%GC_STEPS)!=0;
-	/*if (this->collectionCounter % GC_STEPS == 0)
-	printf("Full Collection!\n");
-	else
-	printf("Incremental Collection!\n");*/
 
 	/* SWEEPING SECTION */
-
 
 	//this must all be done when sweeping!!!!!!!
 
@@ -435,7 +426,6 @@ void GarbageCollector::Sweep()
 			}
 			else
 			{
-				//printf("Freeing Gen 2, %d!\n", ii->type);
 				this->Free(ii);
 			}
 		}
@@ -450,12 +440,9 @@ void GarbageCollector::Sweep()
 			//ii->mark = false;//perhaps do this ONLY IF we just did a gen2 collection
 			//ii->grey = false;
 			this->gen2.push_back(ii);//promote, it SURVIVED
-
-			//printf("Promoting %d!\n", ii->type);
 		}
 		else
 		{
-			//printf("Freeing %d!\n", ii->type);
 			this->Free(ii);
 		}
 	}

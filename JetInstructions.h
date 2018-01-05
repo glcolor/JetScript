@@ -29,7 +29,8 @@ namespace Jet
 		"Decr",
 		"Dup",
 		"Pop",
-		"LdNum",
+		"LdInt",
+		"LdReal",
 		"LdNull",
 		"LdStr",
 		"LoadFunction",
@@ -69,6 +70,7 @@ namespace Jet
 		//dummy instructions for the assembler/debugging
 		"Label",
 		"Local",
+		"Global",
 		"Capture",
 		"DebugLine",
 		"Function"
@@ -90,7 +92,8 @@ namespace Jet
 
 		Dup, Pop,//stack operations
 
-		LdNum,
+		LdInt,
+		LdReal,
 		LdNull,
 		LdStr,
 		LoadFunction,
@@ -102,9 +105,9 @@ namespace Jet
 		NewArray,
 		NewObject,
 
-		Store,Load,//globals
-		LStore,LLoad,//local vars
-		CStore,CLoad,//captures
+		Store,Load,		//globals
+		LStore,LLoad,	//local vars
+		CStore,CLoad,	//captures
 
 		CInit, //to setup captures
 
@@ -130,6 +133,7 @@ namespace Jet
 		//dummy instructions for the assembler/debugging
 		Label,
 		Local,
+		Global,
 		Capture,
 		DebugLine,
 		Function

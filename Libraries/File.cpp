@@ -36,8 +36,8 @@ void RegisterFileLibrary(JetContext* context)
 			throw RuntimeException("Tried to read from a closed file!");
 
 		char* out = new char[((int)v->value)+1];//context->GCAllocate((v)->value);
-		fread(out, 1, (int)v[1], v[0].GetUserdata<FILE>());
-		out[(int)v[1]] = 0;
+		fread(out, 1, (int64_t)v[1], v[0].GetUserdata<FILE>());
+		out[(int64_t)v[1]] = 0;
 		return context->NewString(out, false);
 	});
 	(*filePrototype)["Write"] = Value([](JetContext* context, Value* v, int args)

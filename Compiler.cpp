@@ -308,14 +308,13 @@ void CompilerContext::FinalizeFunction(CompilerContext* c)
 			if (i.second.uploaded == false)
 			{
 				i.second.uploaded = true;
-				//printf("closed %d %d\n", i.second.captureindex, i.second.localindex);
 				out.push_back(IntermediateInstruction(InstructionType::CInit,i.second.localindex/*ptr->localvars[i].local*/, i.second.captureindex/*ptr->localvars[i].capture*/));
 			}
 		}
 	}
 }
 
-void CompilerContext::Load(const std::string variable)
+void CompilerContext::Load(const std::string& variable)
 {
 	Scope* ptr = this->scope;
 	while (ptr)
@@ -325,7 +324,6 @@ void CompilerContext::Load(const std::string variable)
 		{
 			if (ptr->localvars[i].name == variable)
 			{
-				//printf("We found loading of a local var: %s at level %d, index %d\n", variable.c_str(), ptr->level, ptr->localvars[i].first);
 				out.push_back(IntermediateInstruction(InstructionType::LLoad, ptr->localvars[i].local, 0));//i, ptr->level));
 				return;//exit the loops we found it
 			}
@@ -346,7 +344,6 @@ void CompilerContext::Load(const std::string variable)
 			{
 				if (ptr->localvars[i].name == variable)
 				{
-					//printf("We found loading of a captured var: %s at level %d, index %d\n", variable.c_str(), level, ptr->localvars[i].first);
 					auto cpt = prev->captures.find(ptr->localvars[i].name);
 					if (cpt == prev->captures.end())
 					{
@@ -369,7 +366,7 @@ void CompilerContext::Load(const std::string variable)
 	out.push_back(IntermediateInstruction(InstructionType::Load, variable));
 }
 
-void CompilerContext::Store(const std::string variable)
+void CompilerContext::Store(const std::string& variable)
 {
 	//look up if I am a local or global
 	Scope* ptr = this->scope;
@@ -380,7 +377,6 @@ void CompilerContext::Store(const std::string variable)
 		{
 			if (ptr->localvars[i].name == variable)
 			{
-				//printf("We found storing of a local var: %s at level %d, index %d\n", variable.c_str(), ptr->level, ptr->localvars[i].first);
 				out.push_back(IntermediateInstruction(InstructionType::LStore, ptr->localvars[i].local, 0));//i, ptr->level));
 				return;//exit the loops we found it
 			}
@@ -401,7 +397,6 @@ void CompilerContext::Store(const std::string variable)
 			{
 				if (ptr->localvars[i].name == variable)
 				{
-					//printf("We found storing of a captured var: %s at level %d, index %d\n", variable.c_str(), level, ptr->localvars[i].first);
 					//exit the loops we found it
 					auto cpt = prev->captures.find(ptr->localvars[i].name);
 					if (cpt == prev->captures.end())
@@ -423,4 +418,19 @@ void CompilerContext::Store(const std::string variable)
 		cur = cur->parent;
 	}
 	out.push_back(IntermediateInstruction(InstructionType::Store, variable));
+}
+
+void Jet::CompilerContext::StoreGlobal(const std::string& variable)
+{
+	out.push_back(IntermediateInstruction(InstructionType::Store, variable));
+}
+
+void Jet::CopyString(char* dest, const char* src, size_t destSize)
+{
+	strcpy_s(dest, destSize, src);
+}
+
+void Jet::CopySizedString(char* dest, const char* src, size_t destSize, size_t count)
+{
+	strncpy_s(dest, destSize, src, count);
 }

@@ -137,41 +137,116 @@ namespace Jet
 		void Compile(CompilerContext* context);
 	};
 
+	/// <summary>
+	/// 变量定义
+	/// </summary>
+	struct VarDefine 
+	{
+		/// <summary>
+		/// 变量名
+		/// </summary>
+		Token		m_Name;
+
+		/// <summary>
+		/// 变量初始化表达式
+		/// </summary>
+		Expression*	m_Experssion = nullptr;
+	};
+
 	class LocalExpression: public Expression
 	{
-		std::vector<Token>* _names;
-		std::vector<Expression*>* _right;
+		std::vector<VarDefine>*	defines = nullptr;
 	public:
-		LocalExpression(std::vector<Token>* names, std::vector<Expression*>* right)
+		LocalExpression(std::vector<VarDefine>* _defines)
 		{
-			this->_names = names;
-			this->_right = right;
+			defines = _defines;
 		}
 
 		~LocalExpression()
 		{
-			for (auto ii: *this->_right)
-				delete ii;
-
-			delete this->_right;
-			delete this->_names;
+			for (auto d : *this->defines)
+			{
+				if (d.m_Experssion != nullptr)
+				{
+					delete d.m_Experssion;
+				}
+			}
+			delete this->defines;
 		}
 
 		virtual void SetParent(Expression* parent)
 		{
 			this->Parent = parent;
-			for (auto ii: *_right)
-				ii->SetParent(this);
+			for (auto d : *this->defines)
+			{
+				if (d.m_Experssion != nullptr)
+				{
+					d.m_Experssion->SetParent(this);
+				}
+			}
 		}
 
 		void Compile(CompilerContext* context);
 	};
 
-	class NumberExpression: public Expression
+	class GlobalExpression : public Expression
+	{
+		std::vector<VarDefine>*	defines = nullptr;
+	public:
+		GlobalExpression(std::vector<VarDefine>* _defines)
+		{
+			defines = _defines;
+		}
+
+		~GlobalExpression()
+		{
+			for (auto d : *this->defines)
+			{
+				if (d.m_Experssion != nullptr)
+				{
+					delete d.m_Experssion;
+				}
+			}
+			delete this->defines;
+		}
+
+		virtual void SetParent(Expression* parent)
+		{
+			this->Parent = parent;
+			for (auto d : *this->defines)
+			{
+				if (d.m_Experssion != nullptr)
+				{
+					d.m_Experssion->SetParent(this);
+				}
+			}
+		}
+
+		void Compile(CompilerContext* context);
+	};
+
+	class IntNumberExpression : public Expression
+	{
+		int64_t value;
+	public:
+		IntNumberExpression(int64_t value)
+		{
+			this->value = value;
+		}
+
+		int64_t GetValue()
+		{
+			return this->value;
+		}
+
+		void Compile(CompilerContext* context);
+	};
+
+	class RealNumberExpression: public Expression
 	{
 		double value;
 	public:
-		NumberExpression(double value)
+		RealNumberExpression(double value)
 		{
 			this->value = value;
 		}

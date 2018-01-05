@@ -27,7 +27,7 @@ Generator::Generator(JetContext* context, Closure* closure, unsigned int args)
 	{
 		for (int i = closure->prototype->args-1; i >= 0; i--)
 		{
-			if (i < args)
+			if (i < (int)args)
 				stack[i] = context->stack.Pop();
 			else
 				stack[i] = Value();
@@ -38,9 +38,9 @@ Generator::Generator(JetContext* context, Closure* closure, unsigned int args)
 		stack[closure->prototype->locals-1] = context->NewArray();
 		auto arr = &stack[closure->prototype->locals-1]._array->data;
 		arr->resize(args - closure->prototype->args);
-		for (int i = args-1; i >= 0; i--)
+		for (int i = (int)args - 1; i >= 0; i--)
 		{
-			if (i < closure->prototype->args)
+			if (i < (int)closure->prototype->args)
 				stack[i] = context->stack.Pop();
 			else
 				(*arr)[i] = context->stack.Pop();
@@ -48,9 +48,9 @@ Generator::Generator(JetContext* context, Closure* closure, unsigned int args)
 	}
 	else
 	{
-		for (int i = args-1; i >= 0; i--)
+		for (int i = (int)args - 1; i >= 0; i--)
 		{
-			if (i < closure->prototype->args)
+			if (i < (int)closure->prototype->args)
 				stack[i] = context->stack.Pop();
 			else
 				context->stack.Pop();
@@ -122,14 +122,20 @@ Value::Value(JetArray* arr)
 
 Value::Value(double val)
 {
-	type = ValueType::Number;
+	type = ValueType::Real;
 	value = val;
 }
 
 Value::Value(int val)
 {
-	type = ValueType::Number;
-	value = val;
+	type = ValueType::Int;
+	int_value = val;
+}
+
+Value::Value(int64_t val)
+{
+	type = ValueType::Int;
+	int_value = val;
 }
 
 Value::Value(JetNativeFunc a)
@@ -265,7 +271,9 @@ std::string Value::ToString(int depth) const
 	{
 	case ValueType::Null:
 		return "Null";
-	case ValueType::Number:
+	case ValueType::Int:
+		return std::to_string(this->int_value);
+	case ValueType::Real:
 		return std::to_string(this->value);
 	case ValueType::String:
 		return this->_string->data;
@@ -441,7 +449,9 @@ bool Value::operator== (const Value& other) const
 
 	switch (this->type)
 	{
-	case ValueType::Number:
+	case ValueType::Int:
+		return other.int_value == this->int_value;
+	case ValueType::Real:
 		return other.value == this->value;
 	case ValueType::Array:
 		return other._array == this->_array;
@@ -458,14 +468,15 @@ bool Value::operator== (const Value& other) const
 	case ValueType::Userdata:
 		return other._userdata == this->_userdata;
 	}
+	return false;
 }
 
-Value& Value::operator[] (int key)
+Value& Value::operator[] (int64_t key)
 {
 	switch (type)
 	{
 	case ValueType::Array:
-		return this->_array->data[key];
+		return this->_array->data[(size_t)key];
 	case ValueType::Object:
 		return (*this->_object)[key];
 	default:
@@ -507,9 +518,17 @@ Value Value::operator+( const Value &other )
 {
 	switch(this->type)
 	{
-	case ValueType::Number:
-		if (other.type == ValueType::Number)
-			return Value(value+other.value);
+	case ValueType::Int:
+		if (other.type == ValueType::Real)
+			return Value((double)int_value + other.value);
+		else if (other.type == ValueType::Int)
+			return Value(int_value + other.int_value);
+		break;
+	case ValueType::Real:
+		if (other.type == ValueType::Real)
+			return Value(value + other.value);
+		else if (other.type == ValueType::Int)
+			return Value(value + (double)other.int_value);
 		break;
 	case ValueType::Userdata:
 		if (this->_userdata->prototype)
@@ -532,9 +551,17 @@ Value Value::operator-( const Value &other )
 {
 	switch(this->type)
 	{
-	case ValueType::Number:
-		if (other.type == ValueType::Number)
-			return Value(value-other.value);
+	case ValueType::Int:
+		if (other.type == ValueType::Real)
+			return Value((double)int_value - other.value);
+		else if (other.type == ValueType::Int)
+			return Value(int_value - other.int_value);
+		break;
+	case ValueType::Real:
+		if (other.type == ValueType::Real)
+			return Value(value - other.value);
+		else if (other.type == ValueType::Int)
+			return Value(value - (double)other.int_value);
 		break;
 	case ValueType::Userdata:
 		if (this->_userdata->prototype)
@@ -546,14 +573,6 @@ Value Value::operator-( const Value &other )
 		break;
 	}
 
-	/*if (type == ValueType::Number && other.type == ValueType::Number)
-	return Value(value-other.value);
-	else if (type == ValueType::Object)
-	{
-	if (this->_object->prototype)
-	return this->CallMetamethod("_sub", &other);
-	}*/
-
 	throw RuntimeException("Cannot subtract two non-numeric types! " + (std::string)ValueTypes[(int)this->type] + " and " + (std::string)ValueTypes[(int)other.type]);
 };
 
@@ -561,9 +580,17 @@ Value Value::operator*( const Value &other )
 {
 	switch(this->type)
 	{
-	case ValueType::Number:
-		if (other.type == ValueType::Number)
-			return Value(value*other.value);
+	case ValueType::Int:
+		if (other.type == ValueType::Real)
+			return Value((double)int_value * other.value);
+		else if (other.type == ValueType::Int)
+			return Value(int_value * other.int_value);
+		break;
+	case ValueType::Real:
+		if (other.type == ValueType::Real)
+			return Value(value * other.value);
+		else if (other.type == ValueType::Int)
+			return Value(value * (double)other.int_value);
 		break;
 	case ValueType::Userdata:
 		if (this->_userdata->prototype)
@@ -582,9 +609,17 @@ Value Value::operator/( const Value &other )
 {
 	switch(this->type)
 	{
-	case ValueType::Number:
-		if (other.type == ValueType::Number)
-			return Value(value/other.value);
+	case ValueType::Int:
+		if (other.type == ValueType::Real)
+			return Value((double)int_value / other.value);
+		else if (other.type == ValueType::Int)
+			return Value((double)int_value / (double)other.int_value);
+		break;
+	case ValueType::Real:
+		if (other.type == ValueType::Real)
+			return Value(value / other.value);
+		else if (other.type == ValueType::Int)
+			return Value(value / (double)other.int_value);
 		break;
 	case ValueType::Userdata:
 		if (this->_userdata->prototype)
@@ -603,9 +638,25 @@ Value Value::operator%( const Value &other )
 {
 	switch(this->type)
 	{
-	case ValueType::Number:
-		if (other.type == ValueType::Number)
-			return Value((int)value%(int)other.value);
+	case ValueType::Int:
+		if (other.type == ValueType::Real)
+		{
+			return Value(int_value % (int64_t)other.value);
+		}
+		else if (other.type == ValueType::Int)
+		{
+			return Value(int_value % other.int_value);
+		}
+		break;
+	case ValueType::Real:
+		if (other.type == ValueType::Real)
+		{
+			return Value((int64_t)value % (int64_t)other.value);
+		}
+		else if (other.type == ValueType::Int)
+		{
+			return Value((int64_t)value % other.int_value);
+		}
 		break;
 	case ValueType::Userdata:
 		if (this->_userdata->prototype)
@@ -624,9 +675,17 @@ Value Value::operator|( const Value &other )
 {
 	switch(this->type)
 	{
-	case ValueType::Number:
-		if (other.type == ValueType::Number)
-			return Value((int)value|(int)other.value);
+	case ValueType::Int:
+		if (other.type == ValueType::Real)
+			return Value(int_value |(int64_t) other.value);
+		else if (other.type == ValueType::Int)
+			return Value(int_value | other.int_value);
+		break;
+	case ValueType::Real:
+		if (other.type == ValueType::Real)
+			return Value((int64_t)value | (int64_t)other.value);
+		else if (other.type == ValueType::Int)
+			return Value((int64_t)value | other.int_value);
 		break;
 	case ValueType::Userdata:
 		if (this->_userdata->prototype)
@@ -645,9 +704,17 @@ Value Value::operator&( const Value &other )
 {
 	switch(this->type)
 	{
-	case ValueType::Number:
-		if (other.type == ValueType::Number)
-			return Value((int)value&(int)other.value);
+	case ValueType::Int:
+		if (other.type == ValueType::Real)
+			return Value(int_value & (int64_t)other.value);
+		else if (other.type == ValueType::Int)
+			return Value(int_value & other.int_value);
+		break;
+	case ValueType::Real:
+		if (other.type == ValueType::Real)
+			return Value((int64_t)value & (int64_t)other.value);
+		else if (other.type == ValueType::Int)
+			return Value((int64_t)value & other.int_value);
 		break;
 	case ValueType::Userdata:
 		if (this->_userdata->prototype)
@@ -666,9 +733,17 @@ Value Value::operator^( const Value &other )
 {
 	switch(this->type)
 	{
-	case ValueType::Number:
-		if (other.type == ValueType::Number)
-			return Value((int)value^(int)other.value);
+	case ValueType::Int:
+		if (other.type == ValueType::Real)
+			return Value(int_value ^ (int64_t)other.value);
+		else if (other.type == ValueType::Int)
+			return Value(int_value ^ other.int_value);
+		break;
+	case ValueType::Real:
+		if (other.type == ValueType::Real)
+			return Value((int64_t)value ^ (int64_t)other.value);
+		else if (other.type == ValueType::Int)
+			return Value((int64_t)value ^ other.int_value);
 		break;
 	case ValueType::Userdata:
 		if (this->_userdata->prototype)
@@ -687,9 +762,17 @@ Value Value::operator<<( const Value &other )
 {
 	switch(this->type)
 	{
-	case ValueType::Number:
-		if (other.type == ValueType::Number)
-			return Value((int)value<<(int)other.value);
+	case ValueType::Int:
+		if (other.type == ValueType::Real)
+			return Value(int_value << (int64_t)other.value);
+		else if (other.type == ValueType::Int)
+			return Value(int_value << other.int_value);
+		break;
+	case ValueType::Real:
+		if (other.type == ValueType::Real)
+			return Value((int64_t)value << (int64_t)other.value);
+		else if (other.type == ValueType::Int)
+			return Value((int64_t)value << other.int_value);
 		break;
 	case ValueType::Userdata:
 		if (this->_userdata->prototype)
@@ -708,9 +791,17 @@ Value Value::operator>>( const Value &other )
 {
 	switch(this->type)
 	{
-	case ValueType::Number:
-		if (other.type == ValueType::Number)
-			return Value((int)value>>(int)other.value);
+	case ValueType::Int:
+		if (other.type == ValueType::Real)
+			return Value(int_value >> (int64_t)other.value);
+		else if (other.type == ValueType::Int)
+			return Value(int_value >> other.int_value);
+		break;
+	case ValueType::Real:
+		if (other.type == ValueType::Real)
+			return Value((int64_t)value >> (int64_t)other.value);
+		else if (other.type == ValueType::Int)
+			return Value((int64_t)value >> other.int_value);
 		break;
 	case ValueType::Userdata:
 		if (this->_userdata->prototype)
@@ -729,8 +820,10 @@ Value Value::operator~()
 {
 	switch(this->type)
 	{
-	case ValueType::Number:
-		return Value(~(int)value);
+	case ValueType::Int:
+		return Value(~int_value);
+	case ValueType::Real:
+		return Value(~(int64_t)value);
 	case ValueType::Userdata:
 		if (this->_userdata->prototype)
 			return this->CallMetamethod(this->_userdata->prototype, "_bnot", 0);
@@ -748,7 +841,9 @@ Value Value::operator-()
 {
 	switch(this->type)
 	{
-	case ValueType::Number:
+	case ValueType::Int:
+		return Value(-int_value);
+	case ValueType::Real:
 		return Value(-value);
 	case ValueType::Userdata:
 		if (this->_userdata->prototype)

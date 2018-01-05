@@ -15,15 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Parser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -57,9 +48,6 @@
     <ClInclude Include="JetExceptions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="JetArray.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GarbageCollector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -75,14 +63,8 @@
     <ClInclude Include="Libraries\Math.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Bindings.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="AsmVM.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

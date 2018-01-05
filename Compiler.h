@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <stdint.h>
 
 #include "Token.h"
 #include "JetInstructions.h"
@@ -21,6 +22,9 @@
 
 namespace Jet
 {
+	void CopyString(char* dest, const char* src,size_t destSize);
+	void CopySizedString(char* dest, const char* src, size_t destSize,size_t count);
+
 	//add custom operators
 	//add includes/modules
 	//parallelism maybe?
@@ -37,7 +41,8 @@ namespace Jet
 		};
 		union
 		{
-			double second;
+			int64_t		int_second;
+			double		second;
 			struct 
 			{
 				unsigned char a,b,c,d;
@@ -48,8 +53,9 @@ namespace Jet
 		{
 			if (string)
 			{
-				char* c = new char[strlen(string)+1];
-				strcpy(c, string);
+				size_t len = strlen(string);
+				char* c = new char[len+1];
+				CopyString(c, string, len+1);
 				this->string = c;
 			}
 			else 
@@ -62,8 +68,9 @@ namespace Jet
 
 		IntermediateInstruction(InstructionType type, std::string string, double num = 0)
 		{
-			char* c = new char[string.length()+1];
-			strcpy(c, string.c_str());
+			size_t len = string.length();
+			char* c = new char[len + 1];
+			CopyString(c, string.c_str(), len+1);
 			this->string = c;
 			this->type = type;
 			this->first = 0;
@@ -75,6 +82,13 @@ namespace Jet
 			this->type = type;
 			this->first = num;
 			this->second = num2;
+			this->string = 0;
+		}
+		IntermediateInstruction(InstructionType type, int64_t num2,bool _1)
+		{
+			this->type = type;
+			this->first = 0;
+			this->int_second = num2;
 			this->string = 0;
 		}
 	};
@@ -208,26 +222,7 @@ namespace Jet
 
 		void PopLoop()
 		{
-			//close ALL variables
-			//do a close if necessary
-			//whoops, need to have this in the blocks, not here
-			/*bool found = false;
-			for (auto& ii : this->scope->localvars)
-			{
-				if (ii.capture >= 0)
-				{
-					if (ii.uploaded == false)
-					{
-						out.push_back(IntermediateInstruction(InstructionType::CInit,ii.local, ii.capture));
-						ii.uploaded = true;
-					}
-					found = true;
-				}
-			}*/
-			//close all closures in the loop
-			//if (found)
 			out.push_back(IntermediateInstruction(InstructionType::Close, loops.back().locals));
-
 			loops.pop_back();
 		}
 
@@ -243,31 +238,6 @@ namespace Jet
 			if (this->loops.size() == 0)
 				throw CompilerException(this->filename, this->lastline, "Cannot use continue outside of a loop!");
 			this->Jump(loops.back().Continue.c_str());
-		}
-
-		void ForEach(const std::string& dest, const std::string& start, std::string& end)
-		{
-			/*int lpos = 0;
-			for (unsigned int i = 0; i < this->scope->localvars.size(); i++)
-			{
-			if (this->scope->localvars[i].name == dest)
-			{
-			lpos = this->scope->localvars[i].local;
-			break;
-			}
-			}
-			IntermediateInstruction inst(InstructionType::ForEach);
-			inst.second = lpos;
-			//copy the strings
-			char* s = new char[start.length()+1];
-			start.copy(s, start.length());
-			s[start.length()] = 0;
-			char* e = new char[end.length()+1];
-			end.copy(e, end.length());
-			e[end.length()] = 0;
-			inst.string = s;
-			inst.string2 = e;
-			this->out.push_back(inst);*/
 		}
 
 		bool RegisterLocal(const std::string name);//returns success
@@ -291,9 +261,15 @@ namespace Jet
 		{
 			out.push_back(IntermediateInstruction(InstructionType::LdNull));
 		}
-		void Number(double value)
+		
+		void IntNumber(int64_t value)
 		{
-			out.push_back(IntermediateInstruction(InstructionType::LdNum, 0, value));
+			out.push_back(IntermediateInstruction(InstructionType::LdInt, value,true));
+		}
+
+		void RealNumber(double value)
+		{
+			out.push_back(IntermediateInstruction(InstructionType::LdReal, 0, value));
 		}
 
 		void String(std::string string)
@@ -344,18 +320,19 @@ namespace Jet
 		};
 		std::map<std::string, Capture> captures;
 
-		void Store(const std::string variable);
+		void Store(const std::string& variable);
+		void StoreGlobal(const std::string& variable);
 
-		void StoreLocal(const std::string variable)
+		void StoreLocal(const std::string& variable)
 		{
 			//look up if I am local or global
 			this->Store(variable);
 		}
 
 		//this loads locals and globals atm
-		void Load(const std::string variable);
+		void Load(const std::string& variable);
 
-		bool IsLocal(const std::string variable)
+		bool IsLocal(const std::string& variable)
 		{
 			Scope* ptr = this->scope;
 			while (ptr)
@@ -398,12 +375,12 @@ namespace Jet
 			return false;
 		}
 
-		void LoadFunction(const std::string name)
+		void LoadFunction(const std::string& name)
 		{
 			out.push_back(IntermediateInstruction(InstructionType::LoadFunction, name));
 		}
 
-		void Call(const std::string function, unsigned int args)
+		void Call(const std::string& function, unsigned int args)
 		{
 			out.push_back(IntermediateInstruction(InstructionType::Call, function, args));
 		}

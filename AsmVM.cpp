@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
 				{
 					int length;
 					t.seekg(0, std::ios::end);    // go to the end
-					length = t.tellg();           // report location (this is the length)
+					length = (int)t.tellg();           // report location (this is the length)
 					t.seekg(0, std::ios::beg);    // go back to the beginning
 					char* buffer = new char[length];    // allocate memory for a buffer of appropriate dimension
 					t.read(buffer, length);       // read the whole file into the buffer
@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
 					t.seekg(0, std::ios::end);    // go to the end
 					std::streamoff length = t.tellg();           // report location (this is the length)
 					t.seekg(0, std::ios::beg);    // go back to the beginning
-					buffer = new char[length+1];    // allocate memory for a buffer of appropriate dimension
+					buffer = new char[(size_t)length+1];    // allocate memory for a buffer of appropriate dimension
 					t.read(buffer, length);       // read the whole file into the buffer
 					buffer[length] = 0;
 					t.close();
@@ -341,15 +341,15 @@ int main(int argc, char* argv[])
 						"z = [];"
 						"for (local i in x)"
 						"	z:add(i);");
-					if ((int)tcontext["z"][0] != 1)
+					if ((int)tcontext["z"][(int64_t)0] != 1)
 						throw 7;
-					if ((int)tcontext["z"][4] != 5)
+					if ((int)tcontext["z"][(int64_t)4] != 5)
 						throw 7;
 
-					tcontext.Script("x = {a=1,b=2,c=3,d=4,e=5};"
+					tcontext.Script("x = {a=1,b=2.0,c=3,d=4,e=5};"
 						"z = [];"
 						"print(x);"
-						"for (local i in x) {"
+						"for (var i in x) {"
 						" print(i);"
 						"	z:add(i); }");
 					if ((int)tcontext["x"]["a"] != 1)
@@ -357,11 +357,11 @@ int main(int argc, char* argv[])
 					if ((int)tcontext["x"]["e"] != 5)
 						throw 7;
 
-					auto v = tcontext["z"][0];
+					auto v = tcontext["z"][(int64_t)0];
 					if (v == Value())
 						throw 7;
 
-					tcontext.Script("for (local i in {}) print(i);");
+					tcontext.Script("for (var i in {}) print(i);");
 					tcontext.Script("for (local i in []) print(i);");
 				}
 				catch(RuntimeException e)
@@ -416,7 +416,7 @@ int main(int argc, char* argv[])
 				tcontext.Script("apples = {};", "Test 2");
 				tcontext.Script("while(1) { print(\"this should print\"); break; print(\"this should not print\"); continue; } ", "Test 3");
 				tcontext.Script("test = [5,6,7,6,\"hello\"]; return 1;", "Test 4");
-				tcontext.Script("local apple = {}; gc(); global = apple; global[\"test\"] = 7; return 2;", "Test 5");
+				tcontext.Script("local apple = {}; gc(); globalv = apple; globalv[\"test\"] = 7; return 2;", "Test 5");
 				tcontext.Script("fun hi() { local z = 2; z++; x++; fun test(a,b,x) { return a+b+x;} test(); while (true) { h = 2; } ap = \"test\"; } return 7;", "Test 6");
 				tcontext.Script("for (i = 0; i < 10; i++) { for (j = 0; j < 2; j++) h = 7; } apple = fun(x,y) { return x+y;}; return apple(1,2);", "Test 7");
 				tcontext.Script("y = 0; if (x) y++; else y--;", "Test 8");

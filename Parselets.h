@@ -49,12 +49,21 @@ namespace Jet
 		Expression* parse(Parser* parser, Token token);
 	};
 
-	class NumberParselet: public PrefixParselet
+	class IntNumberParselet : public PrefixParselet
 	{
 	public:
 		Expression* parse(Parser* parser, Token token)
 		{
-			return new NumberExpression(::atof(token.getText().c_str()));
+			return new IntNumberExpression(::_atoi64(token.getText().c_str()));
+		}
+	};
+
+	class RealNumberParselet: public PrefixParselet
+	{
+	public:
+		Expression* parse(Parser* parser, Token token)
+		{
+			return new RealNumberExpression(::atof(token.getText().c_str()));
 		}
 	};
 
@@ -331,6 +340,17 @@ namespace Jet
 	{
 	public:
 		LocalParselet()
+		{
+			this->TrailingSemicolon = false;
+		}
+
+		Expression* parse(Parser* parser, Token token);
+	};
+
+	class GlobalParselet : public StatementParselet
+	{
+	public:
+		GlobalParselet()
 		{
 			this->TrailingSemicolon = false;
 		}

@@ -18,7 +18,8 @@ namespace Jet
 	enum class TokenType
 	{
 		Name,
-		Number,
+		IntNumber,
+		RealNumber,
 		String,
 		BlockString,
 		Assign,
@@ -80,6 +81,7 @@ namespace Jet
 		Function,
 		For,
 		Local,
+		Global,
 		Break,
 		Continue,
 		Yield,

@@ -39,7 +39,8 @@ Parser::Parser(Lexer* l)
 	this->filename = l->filename;
 
 	this->Register(TokenType::Name, new NameParselet());
-	this->Register(TokenType::Number, new NumberParselet());
+	this->Register(TokenType::IntNumber, new IntNumberParselet());
+	this->Register(TokenType::RealNumber, new RealNumberParselet());
 	this->Register(TokenType::String, new StringParselet());
 	this->Register(TokenType::Assign, new AssignParselet());
 
@@ -114,6 +115,7 @@ Parser::Parser(Lexer* l)
 	this->Register(TokenType::Ret, new ReturnParselet());
 	this->Register(TokenType::For, new ForParselet());
 	this->Register(TokenType::Local, new LocalParselet());
+	this->Register(TokenType::Global, new GlobalParselet());
 
 	this->Register(TokenType::Break, new BreakParselet());
 	this->Register(TokenType::Continue, new ContinueParselet());
@@ -147,7 +149,7 @@ Expression* Parser::parseExpression(int precedence)
 	if (prefix == 0)
 	{
 		std::string str = "ParseExpression: No Parser Found for: " + token.getText();
-		throw CompilerException(this->filename, token.line, str);//printf("Consume: TokenType not as expected!\n");
+		throw CompilerException(this->filename, token.line, str);
 	}
 
 	Expression* left = prefix->parse(this, token);

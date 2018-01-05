@@ -142,9 +142,18 @@ void NullExpression::Compile(CompilerContext* context)
 		context->Pop();
 }
 
-void NumberExpression::Compile(CompilerContext* context)
+void Jet::IntNumberExpression::Compile(CompilerContext* context)
 {
-	context->Number(this->value);
+	context->IntNumber(this->value);
+
+	//pop off if we dont need the result
+	if (dynamic_cast<BlockExpression*>(this->Parent))
+		context->Pop();
+}
+
+void RealNumberExpression::Compile(CompilerContext* context)
+{
+	context->RealNumber(this->value);
 
 	//pop off if we dont need the result
 	if (dynamic_cast<BlockExpression*>(this->Parent))
@@ -300,7 +309,7 @@ void FunctionExpression::Compile(CompilerContext* context)
 	else
 		fname = "_lambda_id_";
 
-	CompilerContext* function = context->AddFunction(fname, this->args->size(), this->varargs);
+	CompilerContext* function = context->AddFunction(fname, this->args->size(), this->varargs!=nullptr);
 	//ok, kinda hacky
 	int start = context->out.size();
 
@@ -339,21 +348,50 @@ void FunctionExpression::Compile(CompilerContext* context)
 	//vm will pop off locals when it removes the call stack
 }
 
-void LocalExpression::Compile(CompilerContext* context)
+
+void Jet::LocalExpression::Compile(CompilerContext* context)
 {
-	context->Line((*_names)[0].line);
+	context->Line((*defines)[0].m_Name.line);
 
-	//add load variable instruction
-	for (auto ii: *this->_right)
-		ii->Compile(context);
+	for (auto v : *this->defines)
+	{
+		//计算表达式的值
+		if (v.m_Experssion != nullptr)
+		{
+			v.m_Experssion->Compile(context);
+		}
 
-	//make sure to create identifier
-	for (auto _name: *this->_names)
-		if (context->RegisterLocal(_name.getText()) == false)
-			throw CompilerException(context->filename, _name.line, "Duplicate Local Variable '"+_name.text+"'");
+		//创建变量
+		if (context->RegisterLocal(v.m_Name.getText()) == false)
+		{
+			throw CompilerException(context->filename, v.m_Name.line, "Duplicate Local Variable '" + v.m_Name.text + "'");
+		}
 
-	//actually store if we have something to store
-	for (int i = _right->size()-1; i >= 0; i--)
-		context->StoreLocal((*_names)[i].text);
+		//将数据存储到变量
+		if (v.m_Experssion != nullptr)
+		{
+			context->StoreLocal(v.m_Name.text);
+		}
+	}
 }
 
+
+void GlobalExpression::Compile(CompilerContext* context)
+{
+	context->Line((*defines)[0].m_Name.line);
+
+	for (auto v : *this->defines)
+	{
+		//计算表达式的值
+		if (v.m_Experssion != nullptr)
+		{
+			v.m_Experssion->Compile(context);
+		}
+
+		//将数据存储到变量
+		if (v.m_Experssion != nullptr)
+		{
+			context->StoreGlobal(v.m_Name.text);
+		}
+	}
+}

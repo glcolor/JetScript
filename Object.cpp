@@ -55,13 +55,16 @@ std::size_t JetObject::key(const Value* v) const
 	case ValueType::Function:
 	case ValueType::Object:
 		return (size_t)v->_array;
-	case ValueType::Number:
+	case ValueType::Int:
+		return (size_t)v->int_value;
+	case ValueType::Real:
 		return (size_t)v->value;
 	case ValueType::String:
 		return stringhash(v->_string->data);
 	case ValueType::NativeFunction:
 		return (size_t)v->func;
 	}
+	return 0;
 }
 
 //just looks for a node
@@ -262,27 +265,12 @@ void JetObject::resize()
 	}
 
 	delete[] t;
-
-	/*printf("JetObject Resized:\n");
-	for (int i = 0; i < this->nodecount; i++)
-	{
-	auto k = this->nodes[i].first.ToString();
-	auto v = this->nodes[i].second.ToString();
-	printf("[%d] %s    %s   Hash: %i\n", i, k.c_str(), v.c_str(), (this->key(&this->nodes[i].first)%this->nodecount));
-	}*/
 }
 
 //try not to use these in the vm
 Value& JetObject::operator [](const Value& key)
 {
 	ObjNode* node = this->getNode(&key);
-	/*printf("JetObject Changed:\n");
-	for (int i = 0; i < this->nodecount; i++)
-	{
-		auto k = this->nodes[i].first.ToString();
-		auto v = this->nodes[i].second.ToString();
-		printf("[%d] %s    %s   Hash: %i\n", i, k.c_str(), v.c_str(), (this->key(&this->nodes[i].first)%this->nodecount));
-	}*/
 	return node->second;
 }
 
@@ -290,13 +278,6 @@ Value& JetObject::operator [](const Value& key)
 Value& JetObject::operator [](const char* key)
 {
 	ObjNode* node = this->getNode(key);
-	/*printf("JetObject Changed:\n");
-	for (int i = 0; i < this->nodecount; i++)
-	{
-		auto k = this->nodes[i].first.ToString();
-		auto v = this->nodes[i].second.ToString();
-		printf("[%d] %s    %s   Hash: %i\n", i, k.c_str(), v.c_str(), (this->key(&this->nodes[i].first)%this->nodecount));
-	}*/
 	return node->second;
 }
 
@@ -317,7 +298,6 @@ void JetObject::Barrier()
 	if (this->mark)
 	{
 		//reset to grey and push back for reprocessing
-		//printf("object write barrier triggered!\n");
 		this->mark = false;
 		this->context->gc.greys.Push(this);//push to grey stack
 	}

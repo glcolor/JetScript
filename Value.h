@@ -17,22 +17,28 @@ namespace Jet
 {
 	class JetContext;
 
+	/// <summary>
+	/// 值的类型
+	/// </summary>
 	enum class ValueType
 	{
 		//keep all garbage collectable types towards the end after NativeFunction
 		//this is used for the GC being able to tell what it is quickly
 		Null = 0,
-		Number,
+		Int,
+		Real,
 		NativeFunction,
 		String,
 		Object,
 		Array,
 		Function,
 		Userdata,
-		Capture,//you will never see this in the VM
+		Capture,		//you will never see this in the VM
 	};
-
-
+	
+	/// <summary>
+	/// GC值
+	/// </summary>
 	template<class t>
 	struct GCVal
 	{
@@ -53,7 +59,7 @@ namespace Jet
 	struct Value;
 
 
-	static const char* ValueTypes[] = { "Null", "Number", "NativeFunction", "String" , "Object", "Array", "Function", "Userdata"};
+	static const char* ValueTypes[] = { "Null", "Int", "Real", "NativeFunction", "String" , "Object", "Array", "Function", "Userdata"};
 
 	struct String
 	{
@@ -123,7 +129,8 @@ namespace Jet
 				};
 			};
 
-			double lit;//double literal for pushing numbers
+			int64_t int_lit;	//int literal for pushing numbers
+			double	lit;		//double literal for pushing numbers
 		};
 	};
 
@@ -136,7 +143,8 @@ namespace Jet
 					&& ii.instruction != InstructionType::CInit
 					&& ii.instruction != InstructionType::LoadFunction 
 					&& ii.instruction != InstructionType::LdStr 
-					&& ii.instruction != InstructionType::LdNum 
+					&& ii.instruction != InstructionType::LdInt
+					&& ii.instruction != InstructionType::LdReal 
 					&& ii.instruction != InstructionType::Call
 					&& ii.instruction != InstructionType::Load
 					&& ii.instruction != InstructionType::Store
@@ -188,7 +196,8 @@ namespace Jet
 		ValueType type;
 		union
 		{
-			double value;
+			double		value;
+			int64_t		int_value;
 			//this is the main struct
 			struct
 			{
@@ -217,6 +226,7 @@ namespace Jet
 		
 		Value(double val);
 		Value(int val);
+		Value(int64_t val);
 
 		Value(JetNativeFunc a);
 		Value(Closure* func);
@@ -245,18 +255,26 @@ namespace Jet
 
 		operator int()
 		{
-			if (type == ValueType::Number)
-				return (int)value;
+			if (type == ValueType::Int)		return (int)int_value;
+			if (type == ValueType::Real)	return (int)value;
+
+			throw RuntimeException("Cannot convert type " + (std::string)ValueTypes[(int)this->type] + " to int!");
+		}
+
+		operator int64_t()
+		{
+			if (type == ValueType::Int)		return int_value;
+			if (type == ValueType::Real)	return (int64_t)value;
 
 			throw RuntimeException("Cannot convert type " + (std::string)ValueTypes[(int)this->type] + " to int!");
 		}
 
 		operator double()
 		{
-			if (type == ValueType::Number)
-				return value;
+			if (type == ValueType::Int)		return (double)int_value;
+			if (type == ValueType::Real)	return value;
 
-			throw RuntimeException("Cannot convert type " + (std::string)ValueTypes[(int)this->type] + " to double!");
+			throw RuntimeException("Cannot convert type " + (std::string)ValueTypes[(int)this->type] + " to real!");
 		}
 		
 		Value operator() (JetContext* context, Value* v = 0, int args = 0);
@@ -298,7 +316,7 @@ namespace Jet
 		//c++ operator overloading resolution is dumb
 		//and wants to do integer[pointer-to-object]
 		//rather than value[(implicit value)const char*]
-		Value& operator[] (int key);
+		Value& operator[] (int64_t key);
 		Value& operator[] (const char* key);
 		Value& operator[] (const Value& key);
 
@@ -398,7 +416,7 @@ namespace Jet
 
 		Iterator& operator++()
 		{
-			if (ptr && (this->ptr-this->parent->nodes) < (this->parent->nodecount-1))
+			if (ptr && ((this->ptr-this->parent->nodes) < ((int)this->parent->nodecount-1)))
 			{
 				do
 				{
@@ -406,7 +424,7 @@ namespace Jet
 					if (ptr->first.type != ValueType::Null)
 						return *this;
 				}
-				while ((this->ptr-this->parent->nodes) < (this->parent->nodecount-1));
+				while ((this->ptr-this->parent->nodes) < ((int)this->parent->nodecount-1));
 			}
 			this->ptr = 0;
 

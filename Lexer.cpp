@@ -85,24 +85,18 @@ public:
 
 		//keywords
 		keywords["while"] = TokenType::While;
-		keywords["mientras"] = TokenType::While;
 		keywords["if"] = TokenType::If;
-		keywords["si"] = TokenType::If;
 		keywords["elseif"] = TokenType::ElseIf;
-		keywords["otrosi"] = TokenType::ElseIf;
 		keywords["else"] = TokenType::Else;
-		keywords["otro"] = TokenType::Else;
 		keywords["fun"] = TokenType::Function;
+		keywords["function"] = TokenType::Function;
 		keywords["return"] = TokenType::Ret;
-		keywords["volver"] = TokenType::Ret;
 		keywords["for"] = TokenType::For;
-		//add spanish mode yo!
-		keywords["por"] = TokenType::For;
 		keywords["local"] = TokenType::Local;
+		keywords["global"] = TokenType::Global;
+		keywords["var"] = TokenType::Local;
 		keywords["break"] = TokenType::Break;
-		keywords["romper"/*"parar"*/] = TokenType::Break;
 		keywords["continue"] = TokenType::Continue;
-		keywords["continuar"] = TokenType::Continue;
 
 		keywords["null"] = TokenType::Null;
 
@@ -370,7 +364,16 @@ Token Lexer::Next()
 			}
 
 			std::string num = text.substr(start, index-start);
-			return Token(linenumber, TokenType::Number, num);
+			if (num.find('.') !=std::string::npos)
+			{
+				char c = this->PeekChar();
+				if (c == 'f' || c == 'F')
+				{
+					this->ConsumeChar();
+				}
+				return Token(linenumber, TokenType::RealNumber, num);
+			}
+			return Token(linenumber, TokenType::IntNumber, num);
 		}
 		else if (c == '\'')
 		{
@@ -405,7 +408,7 @@ Token Lexer::Next()
 			cc = this->ConsumeChar();
 			if (cc != '\'')
 				throw CompilerException(filename, linenumber, "Closing ' expected for character literal.");
-			return Token(linenumber, TokenType::Number, num);
+			return Token(linenumber, TokenType::IntNumber, num);
 		}
 		else
 		{
