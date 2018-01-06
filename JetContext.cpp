@@ -223,17 +223,6 @@ JetContext::JetContext() : gc(this), stack(500000), callstack(JET_MAX_CALLDEPTH,
 		return Value();
 	};
 
-	/*this should probably be an instruction ...
-	(*this)["unpack"] = [](JetContext* context, Value* args, int argc)
-	{
-	if (argc < 1 || args->type != ValueType::Array || args->_array->data.size() == 0)
-	throw RuntimeException("Cannot unpack non or empty array!");
-
-	for (int i = 0; i < args[0]._array->data.size()-1; i++)
-	context->stack.Push(args[0]._array->data[i]);
-	return args[0]._array->data[args[0]._array->data.size()-1];
-	};*/
-
 	(*this)["loadstring"] = [](JetContext* context, Value* args, int argc)
 	{
 		if (argc < 1 || args[0].type != ValueType::String)
@@ -241,23 +230,6 @@ JetContext::JetContext() : gc(this), stack(500000), callstack(JET_MAX_CALLDEPTH,
 
 		return context->Assemble(context->Compile(args[0]._string->data, "loadstring"));
 	};
-
-	//tiny test for "async" like functionality
-	/*(*this)["createServer"] = [](JetContext* context, Value* v, int args)
-	{
-		Value object = context->NewObject();
-		if (v->IsGenerator())
-		{
-			//make use of this for a simple tcp server
-			Value iterator = v->Call();
-			iterator.Call();//run until it yields
-			Value test = 52;
-			iterator.Call(&test, 1);
-			test = context->NewString("Hello world");
-			iterator.Call(&test, 1);
-		}
-		return object;
-	};*/
 
 	(*this)["setprototype"] = [](JetContext* context, Value* v, int args)
 	{
@@ -401,7 +373,7 @@ JetContext::JetContext() : gc(this), stack(500000), callstack(JET_MAX_CALLDEPTH,
 	(*this->string)["length"] = Value([](JetContext* context, Value* v, int args)
 	{
 		if (args == 1 && v->type == ValueType::String)
-			return Value((double)v->length);
+			return Value((int64_t)v->length);
 		else
 			throw RuntimeException("bad string:length() call!");
 	});
@@ -443,7 +415,7 @@ JetContext::JetContext() : gc(this), stack(500000), callstack(JET_MAX_CALLDEPTH,
 	(*this->Array)["size"] = Value([](JetContext* context, Value* v, int args)
 	{
 		if (args == 1)
-			return Value((int)v->_array->data.size());
+			return Value((int64_t)v->_array->data.size());
 		else
 			throw RuntimeException("Invalid size call!!");
 	});
@@ -491,7 +463,7 @@ JetContext::JetContext() : gc(this), stack(500000), callstack(JET_MAX_CALLDEPTH,
 	{
 		//how do I get access to the array from here?
 		if (args == 1)
-			return Value((int)v->_object->size());
+			return Value((int64_t)v->_object->size());
 		else
 			throw RuntimeException("Invalid size call!!");
 	});
@@ -683,10 +655,7 @@ std::vector<IntermediateInstruction> JetContext::Compile(const char* code, const
 	Lexer lexer = Lexer(code, filename);
 	Parser parser = Parser(&lexer);
 
-	//m_OutputFunction("In: %s\n\nResult:\n", code);
 	BlockExpression* result = parser.parseAll();
-	//result->print();
-	//m_OutputFunction("\n\n");
 
 	std::vector<IntermediateInstruction> out = compiler.Compile(result, filename);
 

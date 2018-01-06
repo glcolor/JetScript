@@ -165,6 +165,42 @@ int main(int argc, char* argv[])
 				printf("%s\n",  E.reason.c_str());
 			}
 		}
+		if (strcmp(command2, "test2") == 0)
+		{
+			char* buffer = 0;
+			try
+			{
+				std::ifstream t("test.cx", std::ios::in | std::ios::binary);
+				if (t)
+				{
+					t.seekg(0, std::ios::end);    // go to the end
+					std::streamoff length = t.tellg();           // report location (this is the length)
+					t.seekg(0, std::ios::beg);    // go back to the beginning
+					buffer = new char[(size_t)length + 1];    // allocate memory for a buffer of appropriate dimension
+					t.read(buffer, length);       // read the whole file into the buffer
+					buffer[length] = 0;
+					t.close();
+
+					context.Script(buffer, "test.cx");
+					delete[] buffer;
+				}
+				else
+				{
+					printf("Could not find file!");
+				}
+			}
+			catch (CompilerException E)
+			{
+				delete[] buffer;
+				printf("Exception found:\n");
+				printf("%s (%d): %s\n", E.file.c_str(), E.line, E.ShowReason());
+			}
+			catch (RuntimeException E)
+			{
+				printf("Exception found:\n");
+				printf("%s\n", E.reason.c_str());
+			}
+		}
 		else if (strcmp(command2, "test") == 0 && arg[0] == 0)
 		{
 			//add a bunch of garbage collector test cases

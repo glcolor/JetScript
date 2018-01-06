@@ -395,3 +395,22 @@ void GlobalExpression::Compile(CompilerContext* context)
 		}
 	}
 }
+
+void Jet::ClassExpression::Compile(CompilerContext* context)
+{
+	printf("class %s 拥有%d个字段，%d个成员函数\n", m_Name.c_str(), (int)m_Fields.size(), (int)m_Functions.size());
+	//每个class对应一个以Class为名的Object对象，这个对象包含了class的全部数据，并且根据需要添加默认构造函数。注意：需要考虑继承的问题
+	//new class时，构造函数的返回值是一个Object，并将自身的成员变量和成员函数复制给该Object（字段需要clone，函数可以直接复制）
+	/*for (auto& i : m_Functions)
+	{
+	i.second->Compile(context);
+	}
+
+	for (auto& i : m_Fields)
+	{
+	if (i.m_Experssion != nullptr)
+	{
+	i.m_Experssion->Compile(context);
+	}
+	}*/
+}

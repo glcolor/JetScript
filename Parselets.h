@@ -397,6 +397,39 @@ namespace Jet
 	public:
 		Expression* parse(Parser* parser, Token token);
 	};
+
+	class ClassParselet :public StatementParselet
+	{
+		std::string									m_Name;
+		std::string									m_Base;
+		std::map<std::string,FunctionExpression*>	m_Functions;
+		std::vector<VarDefine>						m_Fields;
+	public:
+		ClassParselet()
+		{
+			this->TrailingSemicolon = false;
+		}
+
+		Expression* parse(Parser* parser, Token token);
+
+		//是否拥有指定名字的字段或函数
+		bool IsExist(const std::string& name) const
+		{
+			auto i = m_Functions.find(name);
+			if (i != m_Functions.end()) return true;
+			for (auto& v:m_Fields)
+			{
+				if (name==v.m_Name.text) return true;
+			}
+			return false;
+		}
+
+		//解析字段
+		void ParseFields(Parser* parser);
+
+		//解析函数
+		void ParseFunction(Parser* parser, const Token& token);
+	};
 };
 
 #endif

@@ -22,81 +22,85 @@ namespace Jet
 		RealNumber,
 		String,
 		BlockString,
-		Assign,
+		Assign,		// =
 
-		Dot,
+		Dot,		// .
+			
+		Minus,		// -
+		Plus,		// +
+		Asterisk,	// *
+		Slash,		// /
+		Modulo,		// %
+		Or,			// ||
+		And,		// &&
+		BOr,		// |
+		BAnd,		// &
+		Xor,		// ^
+		BNot,		// ~
+		LeftShift,	// <<
+		RightShift,	// >>
 
-		Minus,
-		Plus,
-		Asterisk,
-		Slash,
-		Modulo,
-		Or,
-		And,
-		BOr,
-		BAnd,
-		Xor,
-		BNot,
-		LeftShift,
-		RightShift,
 
+		AddAssign,			// +=
+		SubtractAssign,		// -=
+		MultiplyAssign,		// *=
+		DivideAssign,		// /=
+		AndAssign,			// &=
+		OrAssign,			// |=
+		XorAssign,			// ^=
 
-		AddAssign,
-		SubtractAssign,
-		MultiplyAssign,
-		DivideAssign,
-		AndAssign,
-		OrAssign,
-		XorAssign,
+		NotEqual,			// !=
+		Equals,				// ==
+				
+		LessThan,			// <
+		GreaterThan,		// >
+		LessThanEqual,		// <=
+		GreaterThanEqual,	// >=
 
-		NotEqual,
-		Equals,
+		RightParen,			// )
+		LeftParen,			// (
 
-		LessThan,
-		GreaterThan,
-		LessThanEqual,
-		GreaterThanEqual,
+		LeftBrace,			// {
+		RightBrace,			// }
 
-		RightParen,
-		LeftParen,
+		LeftBracket,		// [
+		RightBracket,		// ]
 
-		LeftBrace,
-		RightBrace,
+		While,		// while
+		If,			// if
+		ElseIf,		// elseif
+		Else,		// else
 
-		LeftBracket,
-		RightBracket,
+		Colon,		//:
+		Semicolon,	//;
+		Comma,		//,
+		Ellipses,	//...
 
-		While,
-		If,
-		ElseIf,
-		Else,
+		Null,		// null
 
-		Colon,
-		Semicolon,
-		Comma,
-		Ellipses,
+		Function,	// function
+		For,		// for
+		Local,		// var »ò local
+		Global,		// global
+		Break,		// break
+		Continue,	// continue
+		Yield,		// yield
+		Resume,		// resume
 
-		Null,
+		Class,		// class
+		New,		// new
+		Base,		// base
 
-		Function,
-		For,
-		Local,
-		Global,
-		Break,
-		Continue,
-		Yield,
-		Resume,
+		Const,		// consy
 
-		Const,
+		Swap,		// <>
 
-		Swap,
+		Ret,		// return
 
-		Ret,
+		Increment,	// ++
+		Decrement,	// --
 
-		Increment,
-		Decrement,
-
-		Operator,
+		Operator,	// operator
 
 		LineComment,
 		CommentBegin,

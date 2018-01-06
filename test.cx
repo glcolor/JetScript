@@ -1,0 +1,7 @@
+a=
+{
+	"a":"aaa",
+	b=function(this){print(this.a);},
+};
+
+a:b();

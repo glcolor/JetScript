@@ -371,11 +371,18 @@ Expression* ObjectParselet::parse(Parser* parser, Token token)
 	{
 		Token name = parser->Consume();
 
-		parser->Consume(TokenType::Assign);
+		Token op = parser->LookAhead();
+		if (op.type == TokenType::Colon || op.type == TokenType::Assign)
+		{
+			parser->Consume();
+		}
+		else
+		{
+			parser->Consume(TokenType::Assign);
+		}
 
 		//parse the data;
 		Expression* e = parser->parseExpression(Precedence::LOGICAL);
-
 		inits->push_back(std::pair<std::string, Expression*>(name.text, e));
 		if (!parser->MatchAndConsume(TokenType::Comma))//is there more to parse?
 			break;//we are done
@@ -414,4 +421,119 @@ Expression* ResumePrefixParselet::parse(Parser* parser, Token token)
 	Expression* right = parser->parseExpression(Precedence::ASSIGNMENT);
 
 	return new ResumeExpression(token, right);
+}
+
+Expression* Jet::ClassParselet::parse(Parser* parser, Token token)
+{
+	m_Name = parser->Consume(TokenType::Name).getText();
+	
+	if (parser->MatchAndConsume(TokenType::Colon))
+	{
+		// 如果类名后面有':',表示类型有基类
+		m_Base = parser->Consume(TokenType::Name).getText();
+	}
+
+	parser->Consume(TokenType::LeftBrace);
+
+	//字段
+	UniquePtr<std::vector<VarDefine>*> fields = new std::vector<VarDefine>;
+	if (!parser->MatchAndConsume(TokenType::RightBrace))
+	{
+		do
+		{
+			auto lookAhead = parser->LookAhead();
+			if (lookAhead.type == TokenType::Local)
+			{
+				//成员变量
+				parser->Consume();
+				ParseFields(parser);
+			}
+			else if (lookAhead.type == TokenType::Function)
+			{
+				//成员函数
+				auto t=parser->Consume();
+				ParseFunction(parser,t);
+			}
+			else
+			{
+				//报错
+				std::string str = "Class: TokenType not as expected! Expected: var or function ,but got: " + lookAhead.text;
+				throw CompilerException(parser->filename, token.line, str);
+			}
+		} while (parser->LookAhead().type!= TokenType::RightBrace);
+
+		parser->Consume(TokenType::RightBrace);
+	}
+	
+	return new ClassExpression(m_Name, m_Base, m_Functions, m_Fields);
+}
+
+void Jet::ClassParselet::ParseFields(Parser* parser)
+{
+	do
+	{
+		VarDefine vd;
+		vd.m_Name = parser->Consume(TokenType::Name);
+		if (parser->MatchAndConsume(TokenType::Assign))
+		{
+			//变量赋初值
+			vd.m_Experssion = parser->parseExpression(Precedence::ASSIGNMENT - 1/*assignment prcedence -1 */);
+		}
+		if (IsExist(vd.m_Name.text))
+		{
+			std::string str = "Class: Name conflict.The name \"" + vd.m_Name.text + "\" has beed used before.";
+			throw CompilerException(parser->filename, vd.m_Name.line, str);
+		}
+		m_Fields.push_back(vd);
+	} while (parser->MatchAndConsume(TokenType::Comma));
+
+	parser->Consume(TokenType::Semicolon);
+}
+
+void Jet::ClassParselet::ParseFunction(Parser* parser, const Token& token)
+{
+	auto lookAhead = parser->LookAhead();
+	if (IsExist(lookAhead.text))
+	{
+		std::string str = "Class: Name conflict.The name \"" + lookAhead.text + "\" has beed used before.";
+		throw CompilerException(parser->filename, lookAhead.line, str);
+	}
+
+	auto name = new NameExpression(parser->Consume(TokenType::Name).getText());
+
+	auto arguments = new std::vector<Expression*>;
+
+	NameExpression* varargs = 0;
+	parser->Consume(TokenType::LeftParen);
+
+	//添加隐含的this参数
+	arguments->push_back(new NameExpression("this"));
+	if (!parser->MatchAndConsume(TokenType::RightParen))
+	{
+		do
+		{
+			Token name = parser->Consume();
+			if (name.type == TokenType::Name)
+			{
+				arguments->push_back(new NameExpression(name.text));
+			}
+			else if (name.type == TokenType::Ellipses)
+			{
+				varargs = new NameExpression(parser->Consume(TokenType::Name).getText());
+
+				break;//this is end of parsing arguments
+			}
+			else
+			{
+				std::string str = "Consume: TokenType not as expected! Expected Name or Ellises Got: " + name.text;
+				throw CompilerException(parser->filename, name.line, str);
+			}
+		} while (parser->MatchAndConsume(TokenType::Comma));
+
+		parser->Consume(TokenType::RightParen);
+	}
+
+	auto block = new ScopeExpression(parser->parseBlock());
+	auto func= new FunctionExpression(token, name, arguments, block, varargs,true);
+	m_Functions[lookAhead.text] = func;
 }

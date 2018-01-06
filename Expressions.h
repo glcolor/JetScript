@@ -877,15 +877,17 @@ namespace Jet
 		ScopeExpression* block;
 		Token token;
 		NameExpression* varargs;
+		bool	isMethod = false;		// is class method
 	public:
 
-		FunctionExpression(Token token, Expression* name, std::vector<Expression*>* args, ScopeExpression* block, NameExpression* varargs = 0)
+		FunctionExpression(Token token, Expression* name, std::vector<Expression*>* args, ScopeExpression* block, NameExpression* varargs = 0,bool method=false)
 		{
 			this->args = args;
 			this->block = block;
 			this->name = name;
 			this->token = token;
 			this->varargs = varargs;
+			this->isMethod = method;
 		}
 
 		~FunctionExpression()
@@ -1039,6 +1041,54 @@ namespace Jet
 			if (dynamic_cast<BlockExpression*>(this->Parent))
 				context->Pop();
 		}
+	};
+
+	class ClassExpression : public Expression
+	{
+		std::string		m_Name;
+		std::string		m_Base;
+		std::map<std::string, FunctionExpression*>	m_Functions;
+		std::vector<VarDefine>						m_Fields;
+	public:
+		ClassExpression(const std::string& name, const std::string& baseName, const std::map<std::string, FunctionExpression*>& funcs, const std::vector<VarDefine>& fields) :m_Name(name), m_Fields(fields), m_Functions(funcs), m_Base(baseName)
+		{
+		}
+
+		~ClassExpression()
+		{
+			for (auto& i : m_Functions)
+			{
+				delete i.second;
+			}
+			m_Functions.clear();
+			for (auto& i : m_Fields)
+			{
+				if (i.m_Experssion != nullptr)
+				{
+					delete i.m_Experssion;
+				}
+			}
+			m_Fields.clear();
+		}
+
+		void SetParent(Expression* parent)
+		{
+			this->Parent = parent;
+			for (auto& i:m_Functions)
+			{
+				i.second->SetParent(this);
+			}
+
+			for (auto& i : m_Fields)
+			{
+				if (i.m_Experssion != nullptr)
+				{
+					i.m_Experssion->SetParent(this);
+				}
+			}
+		}
+
+		void Compile(CompilerContext* context);
 	};
 }
 #endif

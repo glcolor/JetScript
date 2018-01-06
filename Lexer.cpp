@@ -3,16 +3,17 @@
 
 using namespace Jet;
 
-//std::map<TokenType,std::string> Jet::TokenToString; 
 
-class LexerStatic
+std::map<TokenType, std::string> Jet::Lexer::TokenToString;
+
+class LexerData
 {
 public:
 	std::map<std::string, TokenType> operators;
 	std::map<std::string, TokenType> keywords;
 	std::map<char, std::vector<std::pair<std::string, TokenType>>> operatorsearch;
 
-	LexerStatic()
+	LexerData()
 	{
 		//math and assignment
 		operators["="] = TokenType::Assign;
@@ -98,6 +99,10 @@ public:
 		keywords["break"] = TokenType::Break;
 		keywords["continue"] = TokenType::Continue;
 
+		keywords["class"] = TokenType::Class;
+		keywords["new"] = TokenType::New;
+		keywords["base"] = TokenType::Base;
+
 		keywords["null"] = TokenType::Null;
 
 		keywords["yield"] = TokenType::Yield;
@@ -105,11 +110,20 @@ public:
 		//keywords["const"] = TokenType::Const;
 
 		//keywords["operator"] = TokenType::Operator;
+		if (Jet::Lexer::TokenToString.empty())
+		{
+			for (auto ii = operators.begin(); ii != operators.end(); ii++)
+			{
+				Jet::Lexer::TokenToString[ii->second] = ii->first;
+			}
+			for (auto ii = keywords.begin(); ii != keywords.end(); ii++)
+			{
+				Jet::Lexer::TokenToString[ii->second] = ii->first;
+			}
+		}
 
 		for (auto ii = operators.begin(); ii != operators.end(); ii++)
 		{
-			TokenToString[ii->second] = ii->first;
-
 			//build search structure
 			auto t = operatorsearch.find(ii->first[0]);
 			if (t != operatorsearch.end())
@@ -122,9 +136,12 @@ public:
 				operatorsearch[ii->first[0]].push_back(std::pair<std::string, TokenType>(ii->first, ii->second));
 			}
 		}
+
+		
 	};
 };
 
+static LexerData g_LexerData;
 
 bool Jet::IsLetter(char c)
 {
@@ -161,15 +178,14 @@ void ParseKeyword(const std::string& string)
 
 Token Lexer::Next()
 {
-	static LexerStatic ls;
 	while (index < text.length())
 	{
 		char c = this->ConsumeChar();
 		std::string str = text.substr(index-1, 1);
 		bool found = false; unsigned int len = 0;
 		TokenType toktype;
-		auto iter = ls.operatorsearch.find(str[0]);
-		if (iter != ls.operatorsearch.end())
+		auto iter = g_LexerData.operatorsearch.find(str[0]);
+		if (iter != g_LexerData.operatorsearch.end())
 		{
 			for (auto ii: iter->second)
 			{
@@ -345,8 +361,8 @@ Token Lexer::Next()
 
 			std::string name = text.substr(start, index-start);
 			//check if it is a keyword
-			auto keyword = ls.keywords.find(name);
-			if (keyword != ls.keywords.end())//is keyword?
+			auto keyword = g_LexerData.keywords.find(name);
+			if (keyword != g_LexerData.keywords.end())//is keyword?
 				return Token(linenumber, keyword->second, name);
 			else//just a variable name
 				return Token(linenumber, TokenType::Name, name);
@@ -454,3 +470,4 @@ char Lexer::PeekChar()
 
 	return text.at(index);
 }
+

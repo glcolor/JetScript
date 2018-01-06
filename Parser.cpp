@@ -127,6 +127,8 @@ Parser::Parser(Lexer* l)
 	this->Register(TokenType::Yield, new InlineYieldParselet());
 	this->Register(TokenType::Resume, new ResumeParselet());
 	this->Register(TokenType::Resume, new ResumePrefixParselet());
+
+	this->Register(TokenType::Class, new ClassParselet());
 }
 
 Parser::~Parser()
@@ -213,7 +215,11 @@ BlockExpression* Parser::parseAll()
 	std::vector<Expression*> statements;
 	while (!Match(TokenType::EoF))
 	{
-		statements.push_back(this->ParseStatement());
+		auto r = this->ParseStatement();
+		if (r != nullptr)
+		{
+			statements.push_back(r);
+		}		
 	}
 	auto n = new BlockExpression(std::move(statements));
 	n->SetParent(0);//go through and setup parents
@@ -232,7 +238,7 @@ Token Parser::Consume(TokenType expected)
 	auto temp = LookAhead();
 	if (temp.getType() != expected)
 	{
-		std::string str = "Consume: TokenType not as expected! Expected: " + TokenToString[expected] + " Got: " + temp.text;
+		std::string str = "Consume: TokenType not as expected! Expected: '" + Lexer::TokenToString[expected] + "',but got: '" + temp.text+"'";
 		throw CompilerException(this->filename, temp.line, str);
 	}
 	mRead.pop_front();

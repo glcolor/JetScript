@@ -464,6 +464,9 @@
     <ClCompile Include="Parser.cpp" />
     <ClCompile Include="Value.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="test.cx" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
