@@ -6,6 +6,8 @@
 
 namespace Jet
 {
+	const int MaxStackSize = 1024;
+
 	template<class T>
 	class VMStack
 	{
@@ -13,13 +15,14 @@ namespace Jet
 		unsigned int _size;
 		unsigned int _max;
 	public:
-		T mem[5000];
+		T*	_data=nullptr;
+
 		VMStack()
 		{
 			overflow_error = "Stack Overflow";
 			_size = 0;
-			_max = 5000;
-			//mem = new T[size];
+			_max = MaxStackSize;
+			_data = new T[_max];
 		}
 
 		VMStack(unsigned int size)
@@ -27,7 +30,7 @@ namespace Jet
 			_size = 0;
 			_max = size;
 			overflow_error = "Stack Overflow";
-			//mem = new T[size];
+			_data = new T[_max];
 		}
 
 		VMStack(unsigned int size, const char* error)
@@ -35,14 +38,14 @@ namespace Jet
 			_size = 0;
 			_max = size;
 			overflow_error = error;
-			//mem = new T[size];
+			_data = new T[_max];
 		}
 
 		VMStack<T> Copy()
 		{
 			VMStack<T> ns;
 			for (unsigned int i = 0; i < this->_size; i++)
-				ns.mem[i] = this->mem[i];
+				ns._data[i] = this->_data[i];
 
 			ns._size = this->_size;
 			return std::move(ns);
@@ -50,19 +53,29 @@ namespace Jet
 
 		~VMStack()
 		{
-			//delete[] this->mem;
+			if (_data!=nullptr)
+			{
+				delete[] this->_data;
+			}
 		}
 
 		T Pop()
 		{
 			if (_size == 0)
 				throw RuntimeException("Tried to pop empty stack!");
-			return mem[--_size];
+			return _data[--_size];
+		}
+
+		void Pop(T& v)
+		{
+			if (_size == 0)
+				throw RuntimeException("Tried to pop empty stack!");
+			v= _data[--_size];
 		}
 
 		void QuickPop(unsigned int times = 1)
 		{
-			if (this->_size < times)
+			if (_size < times)
 				throw RuntimeException("Tried to pop empty stack!");
 			_size -= times;
 		}
@@ -72,23 +85,33 @@ namespace Jet
 			if (pos >= this->_max)
 				throw RuntimeException("Bad Stack Index");
 
-			return mem[pos];
+			return _data[pos];
+		}
+
+		const T&  Peek() const
+		{
+			return _data[_size-1];
 		}
 
 		T Peek()
 		{
-			return mem[_size-1];
+			return _data[_size - 1];
 		}
 
-		void Push(T item)
+		void Peek(T& v) const
+		{
+			v= _data[_size - 1];
+		}
+
+		void Push(const T& item)
 		{
 			if (_size >= _max)
 				throw RuntimeException(overflow_error);
 
-			mem[_size++] = item;
+			_data[_size++] = item;
 		}
 
-		unsigned int size()
+		unsigned int size() const
 		{
 			return _size;
 		}

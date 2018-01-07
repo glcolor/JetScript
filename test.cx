@@ -1,7 +1,13 @@
-a=
+fun fibo(n)
 {
-	"a":"aaa",
-	b=function(this){print(this.a);},
-};
+    if (n < 2)
+        return n;
+    else
+        return fibo(n-1)+fibo(n-2);
+}
 
-a:b();
+var t=Timer();
+t:Begin();
+fibo(34);
+t:End();
+print(t:GetTime());

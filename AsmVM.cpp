@@ -36,6 +36,98 @@ typedef wchar_t     _TCHAR;
 
 using namespace Jet;
 
+struct Timer
+{
+	INT64 start, end, rate;
+	double deltaTime = 0;
+
+	Timer()
+	{
+		QueryPerformanceFrequency((LARGE_INTEGER *)&rate);
+	}
+
+	void Start()
+	{
+		QueryPerformanceCounter((LARGE_INTEGER *)&start);
+	}
+
+	void End()
+	{
+		QueryPerformanceCounter((LARGE_INTEGER *)&end);
+		INT64 diff = end - start;
+		deltaTime = ((double)diff) / ((double)rate);
+	}
+};
+
+JetObject* TimerPrototype = 0;
+void RegisterTimerLibrary(JetContext* context)
+{
+	/*Value lib = context->NewObject();
+	lib["Open"] = [](JetContext* context, Value* v, int args)
+	{
+	Timer* t = new Timer();
+	return context->NewUserdata(t, TimerPrototype);
+	};
+	context->AddLibrary("Timer", lib);*/
+
+	(*context)["Timer"] = [](JetContext* context, Value* v, int args)
+	{
+		Timer* t = new Timer();
+		return context->NewUserdata(t, TimerPrototype);
+	};
+
+	TimerPrototype = context->NewPrototype("Timer")._object;//new JetObject(context);
+	TimerPrototype->SetPrototype(0);
+	(*TimerPrototype)["Begin"] = Value([](JetContext* context, Value* v, int args)
+	{
+		if (args != 1)
+			throw RuntimeException("Invalid number of arguments to Begin!");
+
+		Timer* t = v[0].GetUserdata<Timer>();
+		t->Start();
+		return Value::Empty;
+	});
+	(*TimerPrototype)["End"] = Value([](JetContext* context, Value* v, int args)
+	{
+		Timer* t = v[0].GetUserdata<Timer>();
+		t->End();
+		return Value(t->deltaTime);
+	});
+
+	(*TimerPrototype)["GetTime"] = [](JetContext* context, Value* v, int args)
+	{
+		Timer* t = v[0].GetUserdata<Timer>();
+		return Value(t->deltaTime);
+	};
+
+	//this function is called when the value is garbage collected
+	(*TimerPrototype)["_gc"] = Value([](JetContext* context, Value* v, int args)
+	{
+		delete v->GetUserdata<Timer>();
+		return Value::Empty;
+	});
+}
+
+int64_t fibo(int64_t n)
+{
+	if (n < 2)
+		return n;
+	else
+		return fibo(n - 1) + fibo(n - 2);
+}
+
+void CTest()
+{
+	INT64 start, end, rate;
+	QueryPerformanceFrequency((LARGE_INTEGER *)&rate);
+	QueryPerformanceCounter((LARGE_INTEGER *)&start);
+	fibo(34);
+	QueryPerformanceCounter((LARGE_INTEGER *)&end);
+	INT64 diff = end - start;
+	double dt = ((double)diff) / ((double)rate);
+	printf("CÓïÑÔºÄÊ±: %lf Ãë\n", dt);
+}
+
 int main(int argc, char* argv[])
 {
 #ifdef _WIN32
@@ -68,6 +160,8 @@ int main(int argc, char* argv[])
 	args[1] = Value(4);
 	args[2] = Value(5);
 	printf("Sizeof Value: %d, Sizeof Instruction: %d\n\n", sizeof(Value), sizeof(Instruction));
+
+	RegisterTimerLibrary(&context);
 
 	if (argc > 1)
 	{
@@ -182,6 +276,9 @@ int main(int argc, char* argv[])
 					t.close();
 
 					context.Script(buffer, "test.cx");
+
+					CTest();
+
 					delete[] buffer;
 				}
 				else

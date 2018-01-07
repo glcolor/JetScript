@@ -24,7 +24,7 @@ using namespace Jet;
 Value Jet::gc(JetContext* context,Value* args, int numargs) 
 { 
 	context->RunGC();
-	return Value();
+	return Value::Empty;
 }
 
 
@@ -61,7 +61,7 @@ Jet::Value Jet::toreal(JetContext* context, Value* args, int numargs)
 Value JetContext::Callstack(JetContext* context, Value* args, int numargs)
 {
 	context->StackTrace(JET_BAD_INSTRUCTION, 0);
-	return Value();
+	return Value::Empty;
 }
 
 Value Jet::print(JetContext* context,Value* args, int numargs) 
@@ -72,7 +72,7 @@ Value Jet::print(JetContext* context,Value* args, int numargs)
 		of("%s", args[i].ToString().c_str());
 	}
 	of("\n");
-	return Value();
+	return Value::Empty;
 };
 
 Value& JetContext::operator[](const std::string& id)
@@ -82,7 +82,7 @@ Value& JetContext::operator[](const std::string& id)
 	{
 		//add it
 		variables[id] = variables.size();
-		vars.push_back(Value());
+		vars.push_back(Value::Empty);
 		return vars[variables[id]];
 	}
 	else
@@ -96,7 +96,7 @@ Value JetContext::Get(const std::string& name)
 	auto iter = variables.find(name);
 	if (iter == variables.end())
 	{
-		return Value();//return null
+		return Value::Empty;//return null
 	}
 	else
 	{
@@ -183,7 +183,7 @@ Value JetContext::NewString(const char* string, bool copy)
 #include "Libraries/File.h"
 #include "Libraries/Math.h"
 
-JetContext::JetContext() : gc(this), stack(500000), callstack(JET_MAX_CALLDEPTH, "Exceeded Max Call Depth!")
+JetContext::JetContext() : gc(this), stack(4096), callstack(JET_MAX_CALLDEPTH, "Call Stack Overflow")
 {
 	this->sptr = this->localstack;//initialize stack pointer
 	this->curframe = 0;
@@ -210,9 +210,9 @@ JetContext::JetContext() : gc(this), stack(500000), callstack(JET_MAX_CALLDEPTH,
 		catch(RuntimeException e)
 		{
 			context->m_OutputFunction("PCall got exception: %s", e.reason.c_str());
-			return Value(0);
+			return Value::Zero;
 		}
-		return Value(0);
+		return Value::Zero;
 	};
 	(*this)["error"] = [](JetContext* context, Value* args, int argc)
 	{
@@ -220,7 +220,7 @@ JetContext::JetContext() : gc(this), stack(500000), callstack(JET_MAX_CALLDEPTH,
 			throw RuntimeException(args->ToString());
 		else
 			throw RuntimeException("User Error Thrown!");
-		return Value();
+		return Value::Empty;
 	};
 
 	(*this)["loadstring"] = [](JetContext* context, Value* args, int argc)
@@ -410,7 +410,7 @@ JetContext::JetContext() : gc(this), stack(500000), callstack(JET_MAX_CALLDEPTH,
 			v->_array->data.push_back(v[1]);
 		else
 			throw RuntimeException("Invalid add call!!");
-		return Value();
+		return Value::Empty;
 	});
 	(*this->Array)["size"] = Value([](JetContext* context, Value* v, int args)
 	{
@@ -425,16 +425,15 @@ JetContext::JetContext() : gc(this), stack(500000), callstack(JET_MAX_CALLDEPTH,
 			v->_array->data.resize((int)v[1]);
 		else
 			throw RuntimeException("Invalid resize call!!");
-		return Value();
+		return Value::Empty;
 	});
-
 	(*this->Array)["remove"] = Value([](JetContext* context, Value* v, int args)
 	{
 		if (args == 2)
 			v->_array->data.erase(v->_array->data.begin()+(int)v[1]);
 		else
 			throw RuntimeException("Invalid remove call!!");
-		return Value();
+		return Value::Empty;
 	});
 
 	struct arrayiter
@@ -497,18 +496,18 @@ JetContext::JetContext() : gc(this), stack(500000), callstack(JET_MAX_CALLDEPTH,
 	{
 		auto iterator = v->GetUserdata<objiter>();
 		if (iterator->iterator == iterator->container->end())
-			return Value(0);
+			return Value::Zero;
 
 		iterator->current = iterator->iterator->second;
 		++iterator->iterator;
-		return Value(1);
+		return Value::One;
 	});
 	(*this->objectiter)["_gc"] = Value([](JetContext* context, Value* v, int args)
 	{
 		auto iter = v->GetUserdata<objiter>();
 		Value(iter->container).Release();
 		delete iter;
-		return Value();
+		return Value::Empty;
 	});
 
 	this->arrayiter = new JetObject(this);
@@ -523,18 +522,18 @@ JetContext::JetContext() : gc(this), stack(500000), callstack(JET_MAX_CALLDEPTH,
 	{
 		auto iterator = v->GetUserdata<arrayiter>();
 		if (iterator->iterator == iterator->container->data.end())
-			return Value(0);
+			return Value::Zero;
 
 		iterator->current = *iterator->iterator;
 		++iterator->iterator;
-		return Value(1);
+		return Value::One;
 	});
 	(*this->arrayiter)["_gc"] = Value([](JetContext* context, Value* v, int args)
 	{
 		auto iter = v->GetUserdata<arrayiter>();
 		Value(iter->container).Release();
 		delete iter;
-		return Value();
+		return Value::Empty;
 	});
 
 	this->function = new JetObject(this);
@@ -544,9 +543,9 @@ JetContext::JetContext() : gc(this), stack(500000), callstack(JET_MAX_CALLDEPTH,
 		if (args >= 1 && v->type == ValueType::Function && v->_function->generator)
 		{
 			if (v->_function->generator->state == Generator::GeneratorState::Dead)
-				return Value(1);
+				return Value::One;
 			else
-				return Value(0);
+				return Value::Zero;
 		}
 		throw RuntimeException("Cannot index a non generator or table");
 	});
@@ -565,7 +564,7 @@ JetContext::JetContext() : gc(this), stack(500000), callstack(JET_MAX_CALLDEPTH,
 			if (v->_function->generator)
 			{
 				if (v->_function->generator->state == Generator::GeneratorState::Dead)
-					return Value();
+					return Value::Empty;
 				else
 					return *v;//hack for foreach loops
 			}
@@ -582,7 +581,7 @@ JetContext::JetContext() : gc(this), stack(500000), callstack(JET_MAX_CALLDEPTH,
 			context->gc.AddObject((GarbageCollector::gcval*)closure);
 
 			if (closure->generator->state == Generator::GeneratorState::Dead)
-				return Value();
+				return Value::Empty;
 			else
 				return Value(closure);
 		}
@@ -607,9 +606,9 @@ JetContext::JetContext() : gc(this), stack(500000), callstack(JET_MAX_CALLDEPTH,
 			//execute generator here
 			context->Call(v);//todo add second arg if we have it
 			if (v->_function->generator->state == Generator::GeneratorState::Dead)
-				return Value(0);
+				return Value::Zero;
 			else
-				return Value(1);
+				return Value::One;
 		}
 		throw RuntimeException("");
 	});
@@ -727,13 +726,12 @@ unsigned int JetContext::Call(const Value* fun, unsigned int iptr, unsigned int 
 			curframe = fun->_function;
 
 			if (args == 0)
-				stack.Push(Value());
+				stack.Push(Value::Empty);
 			else if (args > 1)
 				for (unsigned int i = 1; i < args; i++)
 					stack.Pop();
 			return fun->_function->generator->Resume(this)-1;
 		}
-
 		if (fun->_function->prototype->generator)
 		{
 			//create generator and return it
@@ -760,50 +758,25 @@ unsigned int JetContext::Call(const Value* fun, unsigned int iptr, unsigned int 
 
 		//clean out the new stack for the gc
 		for (unsigned int i = 0; i < fun->_function->prototype->locals; i++)
-			sptr[i] = Value();
+		{
+			sptr[i] = Value::Empty;
+		}
 
 		if ((sptr - localstack) >= JET_STACK_SIZE)
+		{
 			throw RuntimeException("Stack Overflow!");
+		}
 
 		curframe = fun->_function;
-
-		/*if (false)//curframe->closed)
-		{
-		//allocate new local frame here
-		Closure* closure = new Closure;
-		closure->grey = closure->mark = false;
-		closure->prev = curframe->prev;
-		closure->numupvals = curframe->numupvals;
-		closure->closed = false;
-		closure->refcount = 0;
-		closure->generator = 0;
-		closure->type = ValueType::Function;
-		if (closure->numupvals)
-		{
-		closure->upvals = new Value*[closure->numupvals];
-		for (int i = 0; i < closure->numupvals; i++)
-		closure->upvals[i] = (Value*)0xcdcdcdcd;
-		}
-		closure->prototype = curframe->prototype;
-		gc.AddObject((GarbageCollector::gcval*)closure);
-
-		curframe = closure;
-
-		if (gc.allocationCounter++%GC_INTERVAL == 0)
-		this->RunGC();
-		}*/
-		//m_OutputFunction("ECall: Stack Ptr At: %d\n", sptr - localstack);
 
 		Function* func = curframe->prototype;
 		//set all the locals
 		if (args <= func->args)
 		{
-			for (int i = func->args-1; i >= 0; i--)
+			for (int i = (int)func->args-1; i >= 0; i--)
 			{
 				if (i < (int)args)
-					sptr[i] = stack.Pop();
-				else
-					sptr[i] = Value();
+					stack.Pop(sptr[i]);
 			}
 		}
 		else if (func->vararg)
@@ -811,22 +784,22 @@ unsigned int JetContext::Call(const Value* fun, unsigned int iptr, unsigned int 
 			sptr[func->locals-1] = this->NewArray();
 			auto arr = &sptr[func->locals-1]._array->data;
 			arr->resize(args - func->args);
-			for (int i = args-1; i >= 0; i--)
+			for (int i = (int)args-1; i >= 0; i--)
 			{
 				if (i < (int)func->args)
-					sptr[i] = stack.Pop();
+					stack.Pop(sptr[i]);
 				else
-					(*arr)[i] = stack.Pop();
+					stack.Pop((*arr)[i]);
 			}
 		}
 		else
 		{
-			for (int i = args-1; i >= 0; i--)
+			for (int i = (int)args-1; i >= 0; i--)
 			{
 				if (i < (int)func->args)
-					sptr[i] = stack.Pop();
+					stack.Pop(sptr[i]);
 				else
-					stack.Pop();
+					stack.QuickPop();
 			}
 		}
 
@@ -835,7 +808,7 @@ unsigned int JetContext::Call(const Value* fun, unsigned int iptr, unsigned int 
 	}
 	else if (fun->type == ValueType::NativeFunction)
 	{
-		Value* tmp = &stack.mem[stack.size()-args];
+		Value* tmp = &stack._data[stack.size()-args];
 
 		//ok fix this to be cleaner and resolve stack printing
 		//should just push a value to indicate that we are in a native function call
@@ -854,7 +827,7 @@ unsigned int JetContext::Call(const Value* fun, unsigned int iptr, unsigned int 
 	}
 	else if (fun->type == ValueType::Object)
 	{
-		Value* tmp = &stack.mem[stack.size()-args];
+		Value* tmp = &stack._data[stack.size()-args];
 		Value ret;
 		if(fun->TryCallMetamethod("_call", tmp, args, &ret))
 		{
@@ -882,7 +855,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 	callstack.Push(std::pair<unsigned int, Closure*>(JET_BAD_INSTRUCTION, 0));//bad value to get it to return;
 	curframe = frame;
 
-	//m_OutputFunction("Execute: Stack Ptr At: %d\n", sptr - localstack);
+	Value one, two,temp;
 
 	try
 	{
@@ -893,57 +866,57 @@ Value JetContext::Execute(int iptr, Closure* frame)
 			{
 			case InstructionType::Add:
 				{
-					Value one = stack.Pop();
-					Value two = stack.Pop();
+					stack.Pop(one);
+					stack.Pop(two);
 					stack.Push(two+one);
 					break;
 				}
 			case InstructionType::Sub:
 				{
-					Value one = stack.Pop();
-					Value two = stack.Pop();
+					stack.Pop(one);
+					stack.Pop(two);
 					stack.Push(two-one);
 					break;
 				}
 			case InstructionType::Mul:
 				{
-					Value one = stack.Pop();
-					Value two = stack.Pop();
+					stack.Pop(one);
+					stack.Pop(two);
 					stack.Push(two*one);
 					break;
 				}
 			case InstructionType::Div:
 				{
-					Value one = stack.Pop();
-					Value two = stack.Pop();
+					stack.Pop(one);
+					stack.Pop(two);
 					stack.Push(two/one);
 					break;
 				}
 			case InstructionType::Modulus:
 				{
-					Value one = stack.Pop();
-					Value two = stack.Pop();
+					stack.Pop(one);
+					stack.Pop(two);
 					stack.Push(two%one);
 					break;
 				}
 			case InstructionType::BAnd:
 				{
-					Value one = stack.Pop();
-					Value two = stack.Pop();
+					stack.Pop(one);
+					stack.Pop(two);
 					stack.Push(two&one);
 					break;
 				}
 			case InstructionType::BOr:
 				{
-					Value one = stack.Pop();
-					Value two = stack.Pop();
+					stack.Pop(one);
+					stack.Pop(two);
 					stack.Push(two|one);
 					break;
 				}
 			case InstructionType::Xor:
 				{
-					Value one = stack.Pop();
-					Value two = stack.Pop();
+					stack.Pop(one);
+					stack.Pop(two);
 					stack.Push(two^one);
 					break;
 				}
@@ -955,111 +928,111 @@ Value JetContext::Execute(int iptr, Closure* frame)
 				}
 			case InstructionType::LeftShift:
 				{
-					Value one = stack.Pop();
-					Value two = stack.Pop();
+					stack.Pop(one);
+					stack.Pop(two);
 					stack.Push(two<<one);
 					break;
 				}
 			case InstructionType::RightShift:
 				{
-					Value one = stack.Pop();
-					Value two = stack.Pop();
+					stack.Pop(one);
+					stack.Pop(two);
 					stack.Push(two>>one);
 					break;
 				}
 			case InstructionType::Incr:
 				{
-					Value one = stack.Pop();
-					stack.Push(one+Value(1));
+					stack.Pop(one);
+					stack.Push(one+Value::One);
 					break;
 				}
 			case InstructionType::Decr:
 				{
-					Value one = stack.Pop();
-					stack.Push(one-Value(1));
+					stack.Pop(one);
+					stack.Push(one-Value::One);
 					break;
 				}
 			case InstructionType::Negate:
 				{
-					Value one = stack.Pop();
+					stack.Pop(one);
 					stack.Push(-one);
 					break;
 				}
 			case InstructionType::Eq:
 				{
-					Value one = stack.Pop();
-					Value two = stack.Pop();
+					stack.Pop(one);
+					stack.Pop(two);
 
 					if (one == two)
-						stack.Push(Value(1));
+						stack.Push(Value::One);
 					else
-						stack.Push(Value(0));
+						stack.Push(Value::Zero);
 
 					break;
 				}
 			case InstructionType::NotEq:
 				{
-					Value one = stack.Pop();
-					Value two = stack.Pop();
+					stack.Pop(one);
+					stack.Pop(two);
 
 					if (one == two)
-						stack.Push(Value(0));
+						stack.Push(Value::Zero);
 					else
-						stack.Push(Value(1));
+						stack.Push(Value::One);
 
 					break;
 				}
 			case InstructionType::Lt:
 				{
-					Value one = stack.Pop();
-					Value two = stack.Pop();
+					stack.Pop(one);
+					stack.Pop(two);
 
 					if ((double)one > (double)two)
-						stack.Push(Value(1));
+						stack.Push(Value::One);
 					else
-						stack.Push(Value(0));
+						stack.Push(Value::Zero);
 
 					break;
 				}
 			case InstructionType::Gt:
 				{
-					Value one = stack.Pop();
-					Value two = stack.Pop();
+					stack.Pop(one);
+					stack.Pop(two);
 
 					if ((double)one < (double)two)
-						stack.Push(Value(1));
+						stack.Push(Value::One);
 					else
-						stack.Push(Value(0));
+						stack.Push(Value::Zero);
 
 					break;
 				}
 			case InstructionType::GtE:
 				{
-					Value one = stack.Pop();
-					Value two = stack.Pop();
+					stack.Pop(one);
+					stack.Pop(two);
 
 					if ((double)one <= (double)two)
-						stack.Push(Value(1));
+						stack.Push(Value::One);
 					else
-						stack.Push(Value(0));
+						stack.Push(Value::Zero);
 
 					break;
 				}
 			case InstructionType::LtE:
 				{
-					Value one = stack.Pop();
-					Value two = stack.Pop();
+					stack.Pop(one);
+					stack.Pop(two);
 
 					if ((double)one >= (double)two)
-						stack.Push(Value(1));
+						stack.Push(Value::One);
 					else
-						stack.Push(Value(0));
+						stack.Push(Value::Zero);
 
 					break;
 				}
 			case InstructionType::LdNull:
 				{
-					stack.Push(Value());
+					stack.Push(Value::Empty);
 					break;
 				}
 			case InstructionType::LdInt:
@@ -1084,7 +1057,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 				}
 			case InstructionType::JumpTrue:
 				{
-					auto temp = stack.Pop();
+					stack.Pop(temp);
 					switch (temp.type)
 					{
 					case ValueType::Int:
@@ -1100,13 +1073,11 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					default:
 						iptr = in.value-1;
 					}
-					//if ((int)temp)
-					//	iptr = in.value-1;
 					break;
 				}
 			case InstructionType::JumpTruePeek:
 				{
-					auto temp = stack.Peek();
+					const auto& temp = stack.Peek();
 					switch (temp.type)
 					{
 					case ValueType::Int:
@@ -1128,7 +1099,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 				}
 			case InstructionType::JumpFalse:
 				{
-					auto temp = stack.Pop();
+					stack.Pop(temp);
 					switch (temp.type)
 					{
 					case ValueType::Int:
@@ -1149,7 +1120,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 				}
 			case InstructionType::JumpFalsePeek:
 				{
-					auto temp = stack.Peek();
+					const auto& temp = stack.Peek();
 					switch (temp.type)
 					{
 					case ValueType::Int:
@@ -1169,26 +1140,22 @@ Value JetContext::Execute(int iptr, Closure* frame)
 			case InstructionType::Load:
 				{
 					stack.Push(vars[in.value]);
-
 					break;
 				}
 			case InstructionType::Store:
 				{
-					auto temp = stack.Pop();
-					//store me
+					stack.Pop(temp);
 					vars[in.value] = temp;
 					break;
 				}
 			case InstructionType::LLoad:
 				{
-					//m_OutputFunction("Load at: Stack Ptr: %d\n", sptr - localstack + in.value);
 					stack.Push(sptr[in.value]);
 					break;
 				}
 			case InstructionType::LStore:
 				{
-					//m_OutputFunction("Store at: Stack Ptr: %d\n", sptr - localstack + in.value);
-					sptr[in.value] = stack.Pop();
+					stack.Pop(sptr[in.value]);
 					break;
 				}
 			case InstructionType::CLoad:
@@ -1199,8 +1166,6 @@ Value JetContext::Execute(int iptr, Closure* frame)
 						frame = frame->prev;
 
 					stack.Push(*frame->upvals[in.value]->v);
-					//m_OutputFunction("Read Capture %d %s in %s\n", in.value, frame->upvals[in.value]->v->ToString().c_str(), frame->prototype->name.c_str());
-
 					break;
 				}
 			case InstructionType::CStore:
@@ -1230,10 +1195,8 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					}
 					else
 					{
-						*frame->upvals[in.value]->v = stack.Pop();
+						stack.Pop(*frame->upvals[in.value]->v);
 					}
-					//m_OutputFunction("Wrote Capture %d %s in %s\n", in.value, frame->upvals[in.value]->v->ToString().c_str(), frame->prototype->name.c_str());
-
 					break;
 				}
 			case InstructionType::LoadFunction:
@@ -1361,31 +1324,13 @@ Value JetContext::Execute(int iptr, Closure* frame)
 			case InstructionType::Call:
 				{
 					iptr = this->Call(&vars[in.value], iptr, in.value2);
-
-					break;
-
-					//find the variable name from the in.value which is the index into the variable array
-					std::string var;
-					for (auto ii: variables)
-					{
-						if (ii.second == in.value)
-						{
-							var = ii.first;
-							break;
-						}
-					}
-					throw RuntimeException("Cannot call non function '" + var + " of type " + vars[in.value].Type() + "'!!!");
-
 					break;
 				}
 			case InstructionType::ECall:
 				{
 					//allocate capture area here
-					Value fun = stack.Pop();
-					iptr = this->Call(&fun, iptr, in.value);
-
-					//throw RuntimeException("Cannot call non function type " + std::string(fun.Type()) + "!!!");
-
+					stack.Pop(one);
+					iptr = this->Call(&one, iptr, in.value);
 					break;
 				}
 			case InstructionType::Return:
@@ -1606,7 +1551,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					this->gc.gen1.push_back((GarbageCollector::gcval*)arr);
 					arr->data.resize(in.value);
 					for (int i = in.value-1; i >= 0; i--)
-						arr->data[i] = stack.Pop();
+						stack.Pop(arr->data[i]);
 					stack.Push(Value(arr));
 
 					if (gc.allocationCounter++%GC_INTERVAL == 0)
@@ -1621,10 +1566,11 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					obj->refcount = 0;
 					obj->type = ValueType::Object;
 					this->gc.gen1.push_back((GarbageCollector::gcval*)obj);
+					Value key, value;
 					for (int i = in.value-1; i >= 0; i--)
 					{
-						auto value = stack.Pop();
-						auto key = stack.Pop();
+						stack.Pop(value);
+						stack.Pop(key);
 						(*obj)[key] = value;
 					}
 					stack.Push(Value(obj));
@@ -1912,7 +1858,6 @@ Value JetContext::Assemble(const std::vector<IntermediateInstruction>& code)
 				current->debuginfo.push_back(info);
 				//push something into the array at the instruction pointer
 				delete[] inst.string;
-
 				break;
 			}
 		case InstructionType::Function:
@@ -1940,7 +1885,7 @@ Value JetContext::Assemble(const std::vector<IntermediateInstruction>& code)
 						{
 							//添加全局变量
 							variables[inst.string] = variables.size();
-							vars.push_back(Value());
+							vars.push_back(Value::Empty);
 						}
 						ins.value = variables[inst.string];
 						delete[] inst.string;
@@ -2035,7 +1980,7 @@ Value JetContext::Call(const Value* fun, Value* args, unsigned int numargs)
 	if (fun->type != ValueType::NativeFunction && fun->type != ValueType::Function)
 	{
 		m_OutputFunction("ERROR: Variable is not a function\n");
-		return Value();
+		return Value::Empty;
 	}
 	else if (fun->type == ValueType::NativeFunction)
 	{
@@ -2043,7 +1988,7 @@ Value JetContext::Call(const Value* fun, Value* args, unsigned int numargs)
 		int s = this->stack.size();
 		(*fun->func)(this,args,numargs);
 		if (s == this->stack.size())
-			return Value();
+			return Value::Empty;
 
 		return this->stack.Pop();
 	}
@@ -2058,7 +2003,7 @@ Value JetContext::Call(const Value* fun, Value* args, unsigned int numargs)
 		curframe = fun->_function;
 
 		if (numargs == 0)
-			stack.Push(Value());
+			stack.Push(Value::Empty);
 		else if (numargs >= 1)
 			stack.Push(args[0]);
 		int iptr = fun->_function->generator->Resume(this);
@@ -2099,7 +2044,7 @@ Value JetContext::Call(const Value* fun, Value* args, unsigned int numargs)
 
 	//clear stack values for the gc
 	for (unsigned int i = 0; i < fun->_function->prototype->locals; i++)
-		sptr[i] = Value();
+		sptr[i] = Value::Empty;
 
 	//push args onto stack
 	for (unsigned int i = 0; i < numargs; i++)
@@ -2111,9 +2056,7 @@ Value JetContext::Call(const Value* fun, Value* args, unsigned int numargs)
 		for (int i = (int)func->prototype->args - 1; i >= 0; i--)
 		{
 			if (i < (int)numargs)
-				sptr[i] = stack.Pop();
-			else
-				sptr[i] = Value();
+				stack.Pop(sptr[i]);
 		}
 	}
 	else if (func->prototype->vararg)
@@ -2124,9 +2067,9 @@ Value JetContext::Call(const Value* fun, Value* args, unsigned int numargs)
 		for (int i = (int)numargs - 1; i >= 0; i--)
 		{
 			if (i < (int)func->prototype->args)
-				sptr[i] = stack.Pop();
+				stack.Pop(sptr[i]);
 			else
-				(*arr)[i] = stack.Pop();
+				stack.Pop((*arr)[i]);
 		}
 	}
 	else
@@ -2134,9 +2077,9 @@ Value JetContext::Call(const Value* fun, Value* args, unsigned int numargs)
 		for (int i = (int)numargs-1; i >= 0; i--)
 		{
 			if (i < (int)func->prototype->args)
-				sptr[i] = stack.Pop();
+				stack.Pop(sptr[i]);
 			else
-				stack.Pop();
+				stack.QuickPop();
 		}
 	}
 
@@ -2156,14 +2099,14 @@ Value JetContext::Call(const char* function, Value* args, unsigned int numargs)
 	if (variables.find(function) == variables.end())
 	{
 		m_OutputFunction("ERROR: No variable named: '%s' to call\n", function);
-		return Value();
+		return Value::Empty;
 	}
 
 	Value fun = vars[variables[function]];
 	if (fun.type != ValueType::NativeFunction && fun.type != ValueType::Function)
 	{
 		m_OutputFunction("ERROR: Variable '%s' is not a function\n", function);
-		return Value();
+		return Value::Empty;
 	}
 
 	return this->Call(&fun, args, numargs);

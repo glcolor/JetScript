@@ -21,7 +21,7 @@ namespace Jet
 	/// <summary>
 	/// 值的类型
 	/// </summary>
-	enum class ValueType
+	enum class ValueType:char
 	{
 		//keep all garbage collectable types towards the end after NativeFunction
 		//this is used for the GC being able to tell what it is quickly
@@ -196,29 +196,29 @@ namespace Jet
 	struct _JetObject;
 	struct Value
 	{
-		ValueType type;
+		ValueType				type;
 		union
 		{
-			double		value;
-			int64_t		int_value;
+			double				value;
+			int64_t				int_value;
 			//this is the main struct
 			struct
 			{
 				union
 				{
-					JetString* _string;
-					JetObject* _object;
-					JetArray* _array;
+					JetString*	_string;
+					JetObject*	_object;
+					JetArray*	_array;
 					JetUserdata* _userdata;
-					Closure* _function;//jet function
+					Closure*	_function;	//jet function
 				};
 				union
 				{
-					unsigned int length;//used for strings
+					unsigned int length;	//used for strings
 				};
 			};
 
-			JetNativeFunc func;//native func
+			JetNativeFunc		func;		//native func
 		};
 
 		Value();
@@ -297,25 +297,6 @@ namespace Jet
 		void AddRef();
 		void Release();
 
-		/*template<typename First>
-		Value operator() (First f)
-		{
-		this->CallHelper(f);
-		}*/
-
-		/*template<typename First, typename... Types>
-		void CallHelper(First t)
-		{
-		//actually call
-		//this->CallHelper<
-		}
-
-		template<typename First>
-		void CallHelper(First t)
-		{
-		//actually call
-		}*/
-
 		//this massively redundant case is only here because
 		//c++ operator overloading resolution is dumb
 		//and wants to do integer[pointer-to-object]
@@ -346,6 +327,10 @@ namespace Jet
 		Value operator~();
 		Value operator-();
 
+		//空值
+		static Value	Empty;
+		static Value	Zero;
+		static Value	One;
 	private:
 		Value CallMetamethod(const char* name, const Value* other);
 		Value CallMetamethod(JetObject* table, const char* name, const Value* other);
@@ -456,7 +441,7 @@ namespace Jet
 
 		//gc header
 		bool mark, grey;
-		Jet::ValueType type : 8;
+		Jet::ValueType type;
 		unsigned char refcount;
 
 		JetContext* context;

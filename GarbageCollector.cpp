@@ -194,12 +194,12 @@ void GarbageCollector::Mark()
 	{
 		for (unsigned int i = 0; i < context->stack.size(); i++)
 		{
-			if (context->stack.mem[i].type > ValueType::NativeFunction)
+			if (context->stack._data[i].type > ValueType::NativeFunction)
 			{
-				if (context->stack.mem[i]._object->grey == false)
+				if (context->stack._data[i]._object->grey == false)
 				{
-					context->stack.mem[i]._object->grey = true;
-					this->greys.Push(context->stack.mem[i]);
+					context->stack._data[i]._object->grey = true;
+					this->greys.Push(context->stack._data[i]);
 				}
 			}
 		}

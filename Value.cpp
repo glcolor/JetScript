@@ -92,10 +92,15 @@ unsigned int Generator::Resume(JetContext* context)
 	return this->curiptr;
 }
 
+//---------------------------------------------------------------------
+Jet::Value Jet::Value::Empty;
+Jet::Value Jet::Value::Zero(0);
+Jet::Value Jet::Value::One(1);
 
 Value::Value()
 {
 	this->type = ValueType::Null;
+	this->int_value = 0;
 }
 
 Value::Value(JetString* str)
@@ -876,3 +881,5 @@ Value Value::operator-()
 
 	throw RuntimeException("Cannot negate non-numeric type! " + (std::string)ValueTypes[(int)this->type]);
 }
+
+

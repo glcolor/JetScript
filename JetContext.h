@@ -35,7 +35,7 @@
 #define GC_STEPS 4//number of g0 collections before a gen1 collection
 
 #define JET_STACK_SIZE 800
-#define JET_MAX_CALLDEPTH 400
+#define JET_MAX_CALLDEPTH 256
 
 namespace Jet
 {
@@ -64,9 +64,9 @@ namespace Jet
 		VMStack<Value> stack;
 		VMStack<std::pair<unsigned int, Closure*> > callstack;
 
-		std::map<std::string, Function*> functions;
+		std::unordered_map<std::string, Function*> functions;
 		std::vector<Function*> entrypoints;
-		std::map<std::string, unsigned int> variables;//mapping from string to location in vars array
+		std::unordered_map<std::string, unsigned int> variables;//mapping from string to location in vars array
 
 		//actual data being worked on
 		std::vector<Value> vars;//where they are actually stored
