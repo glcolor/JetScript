@@ -4,16 +4,6 @@
 using namespace Jet;
 #undef Yield
 
-#ifdef _DEBUG
-#ifndef DBG_NEW      
-#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )     
-#define new DBG_NEW   
-#endif
-
-#define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
-#endif
-
 Generator::Generator(JetContext* context, Closure* closure, unsigned int args)
 {
 	state = GeneratorState::Suspended;
@@ -109,7 +99,7 @@ Value::Value(JetString* str)
 		return;
 
 	type = ValueType::String;
-	length = strlen(str->data);
+	length = (unsigned int)strlen(str->data);
 	_string = str;
 }
 
@@ -878,7 +868,7 @@ void Value::operator+=(const Value &other)
 				case ValueType::Real:
 				{
 					value += other.value;
-					break;
+					return;
 				}
 				case ValueType::Int:
 				{

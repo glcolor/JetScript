@@ -1,17 +1,6 @@
 #ifndef _LANG_CONTEXT_HEADER
 #define _LANG_CONTEXT_HEADER
 
-#ifdef _DEBUG
-#ifndef DBG_NEW      
-#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )     
-#define new DBG_NEW   
-#endif
-
-#define _CRTDBG_MAP_ALLOC
-//#define _CRTDBG_MAP_ALLOC_NEW
-#include <crtdbg.h>
-#endif
-
 #include <functional>
 #include <string>
 #include <map>
@@ -52,7 +41,7 @@ namespace Jet
 	Value toint(JetContext* context, Value* args, int numargs);
 	Value toreal(JetContext* context, Value* args, int numargs);
 	
-	//信息输出函数
+	// output text
 	typedef int (__cdecl *OutputFunction) (const char* format, ...);
 
 	class JetContext
@@ -98,7 +87,6 @@ namespace Jet
 #endif
 		};
 		std::deque<OpenCapture> opencaptures;
-
 	public:
 		//use these
 		Value NewObject();

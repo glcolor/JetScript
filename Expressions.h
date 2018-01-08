@@ -1,16 +1,6 @@
 #ifndef _EXPRESSIONS_HEADER
 #define _EXPRESSIONS_HEADER
 
-#ifdef _DEBUG
-#ifndef DBG_NEW      
-#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )     
-#define new DBG_NEW   
-#endif
-
-#define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
-#endif
-
 #include <string>
 #include <stdio.h>
 #include <vector>

@@ -96,7 +96,7 @@ void ObjectExpression::Compile(CompilerContext* context)
 	int count = 0;
 	if (this->inits)
 	{
-		count = this->inits->size();
+		count = (int)this->inits->size();
 		//set these up
 		for (auto ii: *this->inits)
 		{
@@ -113,7 +113,7 @@ void ObjectExpression::Compile(CompilerContext* context)
 
 void ArrayExpression::Compile(CompilerContext* context)
 {
-	int count = this->initializers.size();
+	int count = (int)this->initializers.size();
 	for (auto i: this->initializers)
 		i->Compile(context);
 
@@ -197,7 +197,7 @@ void CallExpression::Compile(CompilerContext* context)
 		for (auto i: *args)
 			i->Compile(context);
 
-		context->Call(dynamic_cast<NameExpression*>(left)->GetName(), args->size());
+		context->Call(dynamic_cast<NameExpression*>(left)->GetName(), (unsigned int)args->size());
 	}
 	else// if (dynamic_cast<IStorableExpression*>(left) != 0)
 	{
@@ -214,7 +214,7 @@ void CallExpression::Compile(CompilerContext* context)
 			left->Compile(context);//pushes function
 
 			//increase number of args
-			context->ECall(args->size()+1);
+			context->ECall((unsigned int)args->size() + 1);
 		}
 		else
 		{
@@ -225,7 +225,7 @@ void CallExpression::Compile(CompilerContext* context)
 			//compile left I guess?
 			left->Compile(context);
 
-			context->ECall(args->size());
+			context->ECall((unsigned int)args->size());
 		}
 	}
 	//else
@@ -309,9 +309,9 @@ void FunctionExpression::Compile(CompilerContext* context)
 	else
 		fname = "_lambda_id_";
 
-	CompilerContext* function = context->AddFunction(fname, this->args->size(), this->varargs!=nullptr);
+	CompilerContext* function = context->AddFunction(fname, (unsigned int)this->args->size(), this->varargs != nullptr);
 	//ok, kinda hacky
-	int start = context->out.size();
+	int start = (int)context->out.size();
 
 	//ok push locals, in opposite order
 	for (unsigned int i = 0; i < this->args->size(); i++)

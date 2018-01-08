@@ -46,7 +46,7 @@ namespace Jet
 		JetContext* context = nullptr;
 		bool		mark;
 		bool		grey;
-		ValueType	type : 8;
+		ValueType	type;
 		unsigned char refcount;//used for native functions
 		t			data;
 
@@ -78,7 +78,7 @@ namespace Jet
 	struct JetArray
 	{
 		bool mark, grey;
-		ValueType type : 8;
+		ValueType type;
 		unsigned char refcount;
 		
 		JetContext* context;
@@ -91,7 +91,7 @@ namespace Jet
 	struct JetUserdata
 	{
 		bool mark, grey;
-		ValueType type : 8;
+		ValueType type;
 		unsigned char refcount;
 
 		void* data;

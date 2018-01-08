@@ -1,13 +1,3 @@
-#ifdef _DEBUG
-#ifndef DBG_NEW      
-#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )     
-#define new DBG_NEW   
-#endif
-
-#define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
-#endif
-
 #include "JetContext.h"
 #include "UniquePtr.h"
 
@@ -20,6 +10,11 @@
 using namespace Jet;
 
 #define JET_BAD_INSTRUCTION 123456789
+
+//----------------------------------------------------------------
+Jet::MemoryAlloc Jet::g_MemoryAlloc = malloc;
+Jet::MemoryFree Jet::g_MemoryFree = free;
+//----------------------------------------------------------------
 
 Value Jet::gc(JetContext* context,Value* args, int numargs) 
 { 
@@ -81,7 +76,7 @@ Value& JetContext::operator[](const std::string& id)
 	if (iter == variables.end())
 	{
 		//add it
-		variables[id] = variables.size();
+		variables[id] = (unsigned int)variables.size();
 		vars.push_back(Value::Empty);
 		return vars[variables[id]];
 	}
@@ -110,7 +105,7 @@ void JetContext::Set(const std::string& name, const Value& value)
 	if (iter == variables.end())
 	{
 		//add it
-		variables[name] = variables.size();
+		variables[name] = (unsigned int)variables.size();
 		vars.push_back(value);
 	}
 	else
@@ -1275,7 +1270,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					while (opencaptures.size() > 0)
 					{
 						auto cur = opencaptures.back();
-						int index = cur.capture->v-sptr;
+						int index = (int)(cur.capture->v - sptr);
 						if (index < in.value)
 							break;
 
@@ -1536,8 +1531,10 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					arr->type = ValueType::Array;
 					this->gc.gen1.push_back((GarbageCollector::gcval*)arr);
 					arr->data.resize(in.value);
-					for (int i = in.value-1; i >= 0; i--)
+					for (int i = in.value - 1; i >= 0; i--)
+					{
 						stack.Pop(arr->data[i]);
+					}
 					vmstack_push(stack,(Value(arr)));
 
 					if (gc.allocationCounter++%GC_INTERVAL == 0)
@@ -1690,7 +1687,7 @@ void JetContext::GetCode(int ptr, Closure* closure, std::string& ret, unsigned i
 		return;
 	}
 
-	int imax = closure->prototype->debuginfo.size()-1;
+	int imax = (int)closure->prototype->debuginfo.size()-1;
 	int imin = 0;
 	while (imax >= imin)
 	{
@@ -1840,7 +1837,7 @@ Value JetContext::Assemble(const std::vector<IntermediateInstruction>& code)
 				Function::DebugInfo info;
 				info.file = inst.string;
 				info.line = (unsigned int)inst.second;
-				info.code = current->instructions.size();
+				info.code = (unsigned int)current->instructions.size();
 				current->debuginfo.push_back(info);
 				//push something into the array at the instruction pointer
 				delete[] inst.string;
@@ -1870,7 +1867,7 @@ Value JetContext::Assemble(const std::vector<IntermediateInstruction>& code)
 						if (variables.find(inst.string) == variables.end())
 						{
 							//添加全局变量
-							variables[inst.string] = variables.size();
+							variables[inst.string] = (unsigned int)variables.size();
 							vars.push_back(Value::Empty);
 						}
 						ins.value = variables[inst.string];

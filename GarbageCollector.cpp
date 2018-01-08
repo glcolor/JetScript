@@ -15,16 +15,16 @@ void GarbageCollector::Cleanup()
 {
 	//need to do a two pass system to properly destroy userdata
 	//first pass of destructing
-	for (auto ii: this->gen1)
+	for (auto& ii: this->gen1)
 	{
 		switch (ii->type)
 		{
-		case ValueType::Function:
-		case ValueType::Object:
-		case ValueType::Array:
-		case ValueType::String:
+		case (int)ValueType::Function:
+		case (int)ValueType::Object:
+		case (int)ValueType::Array:
+		case (int)ValueType::String:
 			break;
-		case ValueType::Userdata:
+		case (int)ValueType::Userdata:
 			{
 				Value ud = Value(((JetUserdata*)ii), ((JetUserdata*)ii)->prototype);
 				Value _gc = (*((JetUserdata*)ii)->prototype).get("_gc");
@@ -39,16 +39,16 @@ void GarbageCollector::Cleanup()
 		}
 	}
 
-	for (auto ii: this->gen2)
+	for (auto& ii: this->gen2)
 	{
 		switch (ii->type)
 		{
-		case ValueType::Function:
-		case ValueType::Object:
-		case ValueType::Array:
-		case ValueType::String:
+		case (int)ValueType::Function:
+		case (int)ValueType::Object:
+		case (int)ValueType::Array:
+		case (int)ValueType::String:
 			break;
-		case ValueType::Userdata:
+		case (int)ValueType::Userdata:
 			{
 				Value ud = Value(((JetUserdata*)ii), ((JetUserdata*)ii)->prototype);
 				Value _gc = (*((JetUserdata*)ii)->prototype).get("_gc");
@@ -64,11 +64,11 @@ void GarbageCollector::Cleanup()
 	}
 
 	//delete everything else
-	for (auto ii: this->gen1)
+	for (auto& ii: this->gen1)
 	{
 		switch (ii->type)
 		{
-		case ValueType::Function:
+		case (int)ValueType::Function:
 			{
 				Closure* fun = (Closure*)ii;
 				if (fun->numupvals)
@@ -77,25 +77,25 @@ void GarbageCollector::Cleanup()
 				delete fun;
 				break;
 			}
-		case ValueType::Object:
+		case (int)ValueType::Object:
 			delete (JetObject*)ii;
 			break;
-		case ValueType::Array:
+		case (int)ValueType::Array:
 			((JetArray*)ii)->data.~vector();
 			delete[] (char*)ii;
 			break;
-		case ValueType::Userdata:
+		case (int)ValueType::Userdata:
 			//did in first pass
 			delete (JetUserdata*)ii;
 			break;
-		case ValueType::String:
+		case (int)ValueType::String:
 			{
 				JetString* str = (JetString*)ii;
 				delete[] str->data;
 				delete str;
 				break;
 			}
-		case ValueType::Capture:
+		case (int)ValueType::Capture:
 			{
 				Capture* c = (Capture*)ii;
 				delete c;
@@ -104,11 +104,11 @@ void GarbageCollector::Cleanup()
 		}
 	}
 
-	for (auto ii: this->gen2)
+	for (auto& ii: this->gen2)
 	{
 		switch (ii->type)
 		{
-		case ValueType::Function:
+		case (int)ValueType::Function:
 			{
 				Closure* fun = (Closure*)ii;
 				if (fun->numupvals)
@@ -117,24 +117,24 @@ void GarbageCollector::Cleanup()
 				delete fun;
 				break;
 			}
-		case ValueType::Object:
+		case (int)ValueType::Object:
 			delete (JetObject*)ii;
 			break;
-		case ValueType::Array:
+		case (int)ValueType::Array:
 			delete ((JetArray*)ii);
 			break;
-		case ValueType::Userdata:
+		case (int)ValueType::Userdata:
 			//did in first pass
 			delete (JetUserdata*)ii;
 			break;
-		case ValueType::String:
+		case (int)ValueType::String:
 			{
 				JetString* str = (JetString*)ii;
 				delete[] str->data;
 				delete str;
 				break;
 			}
-		case ValueType::Capture:
+		case (int)ValueType::Capture:
 			{
 				Capture* c = (Capture*)ii;
 				delete c;
@@ -415,7 +415,7 @@ void GarbageCollector::Sweep()
 	{
 		auto g2list = std::move(this->gen2);
 		this->gen2.clear();
-		for (auto ii: g2list)
+		for (auto& ii: g2list)
 		{
 			if (ii->mark || ii->refcount)
 			{
@@ -433,7 +433,7 @@ void GarbageCollector::Sweep()
 
 	auto g1list = std::move(this->gen1);
 	this->gen1.clear();
-	for (auto ii: g1list)
+	for (auto& ii: g1list)
 	{
 		if (ii->mark || ii->refcount)
 		{
@@ -490,7 +490,7 @@ void GarbageCollector::Free(gcval* ii)
 {
 	switch (ii->type)
 	{
-	case ValueType::Function:
+	case (int)ValueType::Function:
 		{
 			Closure* fun = (Closure*)ii;
 #ifdef JETGCDEBUG
@@ -506,7 +506,7 @@ void GarbageCollector::Free(gcval* ii)
 #endif
 			break;
 		}
-	case ValueType::Object:
+	case (int)ValueType::Object:
 		{
 #ifdef JETGCDEBUG
 			JetObject* obj = (JetObject*)ii;
@@ -516,7 +516,7 @@ void GarbageCollector::Free(gcval* ii)
 #endif
 			break;
 		}
-	case ValueType::Array:
+	case (int)ValueType::Array:
 		{
 #ifdef JETGCDEBUG
 			JetArray* arr = (JetArray*)ii;
@@ -526,7 +526,7 @@ void GarbageCollector::Free(gcval* ii)
 			//#endif
 			break;
 		}
-	case ValueType::Userdata:
+	case (int)ValueType::Userdata:
 		{
 			Value ud = Value(((JetUserdata*)ii), ((JetUserdata*)ii)->prototype);
 			Value _gc = (*((JetUserdata*)ii)->prototype).get("_gc");
@@ -539,18 +539,17 @@ void GarbageCollector::Free(gcval* ii)
 			delete (JetUserdata*)ii;
 			break;
 		}
-	case ValueType::String:
+	case (int)ValueType::String:
 		{
 			JetString* str = (JetString*)ii;
 			delete[] str->data;
 			delete str;
 			break;
 		}
-	case ValueType::Capture:
+	case (int)ValueType::Capture:
 		{
 			Capture* uv = (Capture*)ii;
 			delete uv;
-			//printf("Freeing capture!\n");
 			break;
 		}
 #ifdef _DEBUG

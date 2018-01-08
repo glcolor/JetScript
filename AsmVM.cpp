@@ -1,15 +1,6 @@
 // AsmVM.cpp : Defines the entry point for the console application.
 //
 //add multiple returns perhaps?
-#ifdef _DEBUG
-#ifndef DBG_NEW      
-#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )     
-#define new DBG_NEW   
-#endif
-
-#define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
-#endif
 
 #include <stdio.h>
 
@@ -598,6 +589,7 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	context.RunGC();
 	return 0;
 }
 

@@ -1,16 +1,6 @@
 #ifndef _JET_GC_HEADER
 #define _JET_GC_HEADER
 
-#ifdef _DEBUG
-#ifndef DBG_NEW      
-#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )     
-#define new DBG_NEW   
-#endif
-
-#define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
-#endif
-
 #include "Value.h"
 #include "VMStack.h"
 #include <vector>
@@ -24,40 +14,6 @@ namespace Jet
 		friend class JetObject;
 		friend struct Value;
 		//must free with GCFree, pointer is a bit offset to leave room for the flag
-
-		/*template<class T> 
-		T* GCAllocate2(unsigned int size)
-		{
-		return (T*)((new char[sizeof(T)]));
-		}
-
-		char* GCAllocate(unsigned int size)
-		{
-		//this leads to less indirection, and simplified cleanup
-		char* data = new char[size];//enough room for the flag
-		//this->gcObjects.push_back(data);
-		return data;
-		}
-
-		//need to call destructor first
-		template<class T>
-		void GCFree(T* data)
-		{
-		data->~T();
-		delete[] (((char*)data));
-		}
-
-		template<class T[]>
-		void GCFree(T* data)
-		{
-		data->~T();
-		delete[] (((char*)data));
-		}
-
-		void GCFree(char* data)
-		{
-		delete[] (data);
-		}*/
 
 		JetContext* context;
 	public:
@@ -93,18 +49,9 @@ namespace Jet
 		T* New()
 		{
 			//need to call constructor
-			T* buf = new T;
-#undef new
+			T* buf = new T();
 			this->gen1.push_back((gcval*)buf);
-			//new (buf) T();
 			return (T*)(buf);
-
-#ifdef _DEBUG
-#ifndef DBG_NEW      
-#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )     
-#define new DBG_NEW   
-#endif
-#endif
 		}
 
 		//hack for objects
@@ -113,17 +60,8 @@ namespace Jet
 		{
 			//need to call constructor
 			T* buf = new T(arg1);
-#undef new
 			this->gen1.push_back((gcval*)buf);
-			//new (buf) T(arg1);
 			return (T*)(buf);
-
-#ifdef _DEBUG
-#ifndef DBG_NEW      
-#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )     
-#define new DBG_NEW   
-#endif
-#endif
 		}
 
 		//hack for strings
@@ -132,17 +70,8 @@ namespace Jet
 		{
 			//need to call constructor
 			T* buf = new T(arg1);
-#undef new
 			this->gen1.push_back((gcval*)buf);
-			//new (buf) T(arg1);
 			return (T*)(buf);
-
-#ifdef _DEBUG
-#ifndef DBG_NEW      
-#define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )     
-#define new DBG_NEW   
-#endif
-#endif
 		}
 
 		//hack for userdata
@@ -151,7 +80,6 @@ namespace Jet
 		{
 			//need to call constructor
 			T* buf = new T(arg1, arg2);
-#undef new
 			this->gen1.push_back((gcval*)buf);
 			//new (buf) T(arg1, arg2);
 			return (T*)(buf);

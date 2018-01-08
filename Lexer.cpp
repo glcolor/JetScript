@@ -102,6 +102,7 @@ public:
 		keywords["class"] = TokenType::Class;
 		keywords["new"] = TokenType::New;
 		keywords["base"] = TokenType::Base;
+		keywords["operator"] = TokenType::Operator;
 
 		keywords["null"] = TokenType::Null;
 
@@ -109,7 +110,6 @@ public:
 		keywords["resume"] = TokenType::Resume;
 		//keywords["const"] = TokenType::Const;
 
-		//keywords["operator"] = TokenType::Operator;
 		if (Jet::Lexer::TokenToString.empty())
 		{
 			for (auto ii = operators.begin(); ii != operators.end(); ii++)
@@ -199,7 +199,7 @@ Token Lexer::Next()
 				//check if the characters match the operator/keyword
 				if(memcmp(ii.first.c_str(), &text.c_str()[index-1], ii.first.length()) == 0)
 				{
-					len = ii.first.length();
+					len = (unsigned int)ii.first.length();
 					str = ii.first;
 					toktype = ii.second;
 					found = true;
