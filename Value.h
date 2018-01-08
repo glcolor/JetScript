@@ -234,6 +234,12 @@ namespace Jet
 		Value(JetNativeFunc a);
 		Value(Closure* func);
 
+		inline void	SetBool(bool v)
+		{
+			type = ValueType::Int;
+			int_value = v ? 1 : 0;
+		}
+
 		explicit Value(JetUserdata* userdata, JetObject* prototype);
 
 		Value& operator= (const JetNativeFunc& func)
@@ -326,6 +332,13 @@ namespace Jet
 		//unary operators
 		Value operator~();
 		Value operator-();
+
+		// -
+		void	Negate();
+		// ++
+		void	Increase();
+		// --
+		void	Decrease();
 
 		//¿ÕÖµ
 		static Value	Empty;

@@ -8,6 +8,7 @@ fun fibo(n)
 
 var t=Timer();
 t:Begin();
-fibo(34);
+var v=fibo(34);
 t:End();
 print(t:GetTime());
+print(v);

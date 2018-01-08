@@ -882,4 +882,65 @@ Value Value::operator-()
 	throw RuntimeException("Cannot negate non-numeric type! " + (std::string)ValueTypes[(int)this->type]);
 }
 
+void Jet::Value::Negate()
+{
+	switch (this->type)
+	{
+		case ValueType::Int:
+			int_value = -int_value;
+		case ValueType::Real:
+			value = -value;
+		case ValueType::Userdata:
+			if (this->_userdata->prototype)
+				this->CallMetamethod(this->_userdata->prototype, "_neg", 0);
+			break;
+		case ValueType::Object:
+			if (this->_object->prototype)
+				this->CallMetamethod("_neg", 0);
+			break;
+	}
 
+	throw RuntimeException("Cannot negate non-numeric type! " + (std::string)ValueTypes[(int)this->type]);
+}
+
+void Jet::Value::Increase()
+{
+	switch (this->type)
+	{
+		case ValueType::Int:
+			++int_value;
+		case ValueType::Real:
+			++value;
+		case ValueType::Userdata:
+			if (this->_userdata->prototype)
+				this->CallMetamethod(this->_userdata->prototype, "_incr", 0);
+			break;
+		case ValueType::Object:
+			if (this->_object->prototype)
+				this->CallMetamethod("_incr", 0);
+			break;
+	}
+
+	throw RuntimeException("Cannot incr non-numeric type! " + (std::string)ValueTypes[(int)this->type]);
+}
+
+void Jet::Value::Decrease()
+{
+	switch (this->type)
+	{
+		case ValueType::Int:
+			--int_value;
+		case ValueType::Real:
+			--value;
+		case ValueType::Userdata:
+			if (this->_userdata->prototype)
+				this->CallMetamethod(this->_userdata->prototype, "_decr", 0);
+			break;
+		case ValueType::Object:
+			if (this->_object->prototype)
+				this->CallMetamethod("_decr", 0);
+			break;
+	}
+
+	throw RuntimeException("Cannot decr non-numeric type! " + (std::string)ValueTypes[(int)this->type]);
+}

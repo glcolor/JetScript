@@ -12,10 +12,10 @@ namespace Jet
 	class VMStack
 	{
 		const char* overflow_error;
-		unsigned int _size;
 		unsigned int _max;
 	public:
 		T*	_data=nullptr;
+		unsigned int _size;
 
 		VMStack()
 		{
@@ -73,10 +73,8 @@ namespace Jet
 			v= _data[--_size];
 		}
 
-		void QuickPop(unsigned int times = 1)
+		inline void QuickPop(unsigned int times = 1)
 		{
-			if (_size < times)
-				throw RuntimeException("Tried to pop empty stack!");
 			_size -= times;
 		}
 
@@ -88,14 +86,9 @@ namespace Jet
 			return _data[pos];
 		}
 
-		const T&  Peek() const
+		T& Peek(int offset=0)
 		{
-			return _data[_size-1];
-		}
-
-		T Peek()
-		{
-			return _data[_size - 1];
+			return _data[_size - 1-offset];
 		}
 
 		void Peek(T& v) const

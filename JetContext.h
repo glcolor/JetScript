@@ -34,8 +34,8 @@
 #define GC_INTERVAL 200//number of allocations before running the GC
 #define GC_STEPS 4//number of g0 collections before a gen1 collection
 
-#define JET_STACK_SIZE 800
-#define JET_MAX_CALLDEPTH 256
+#define JET_STACK_SIZE 1024
+#define JET_MAX_CALLDEPTH 1024
 
 namespace Jet
 {

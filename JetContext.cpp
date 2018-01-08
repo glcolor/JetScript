@@ -866,168 +866,155 @@ Value JetContext::Execute(int iptr, Closure* frame)
 			{
 			case InstructionType::Add:
 				{
-					stack.Pop(one);
-					stack.Pop(two);
-					stack.Push(two+one);
+					const Value& b = stack.Peek();
+					--stack._size;
+					Value& a = stack.Peek();
+					a = a + b;
 					break;
 				}
 			case InstructionType::Sub:
 				{
-					stack.Pop(one);
-					stack.Pop(two);
-					stack.Push(two-one);
+					const Value& b = stack.Peek();
+					--stack._size;
+					Value& a = stack.Peek();
+					a = a - b;
 					break;
 				}
 			case InstructionType::Mul:
 				{
-					stack.Pop(one);
-					stack.Pop(two);
-					stack.Push(two*one);
+					const Value& b = stack.Peek();
+					--stack._size;
+					Value& a = stack.Peek();
+					a = a * b;
 					break;
 				}
 			case InstructionType::Div:
 				{
-					stack.Pop(one);
-					stack.Pop(two);
-					stack.Push(two/one);
+					const Value& b = stack.Peek();
+					--stack._size;
+					Value& a = stack.Peek();
+					a = a / b;
 					break;
 				}
 			case InstructionType::Modulus:
 				{
-					stack.Pop(one);
-					stack.Pop(two);
-					stack.Push(two%one);
+					const Value& b = stack.Peek();
+					--stack._size;
+					Value& a = stack.Peek();
+					a = a % b;
 					break;
 				}
 			case InstructionType::BAnd:
 				{
-					stack.Pop(one);
-					stack.Pop(two);
-					stack.Push(two&one);
+					const Value& b = stack.Peek();
+					--stack._size;
+					Value& a = stack.Peek();
+					a = a & b;
 					break;
 				}
 			case InstructionType::BOr:
 				{
-					stack.Pop(one);
-					stack.Pop(two);
-					stack.Push(two|one);
+					const Value& b = stack.Peek();
+					--stack._size;
+					Value& a = stack.Peek();
+					a = a | b;
 					break;
 				}
 			case InstructionType::Xor:
 				{
-					stack.Pop(one);
-					stack.Pop(two);
-					stack.Push(two^one);
+					const Value& b = stack.Peek();
+					--stack._size;
+					Value& a = stack.Peek();
+					a = a ^ b;
 					break;
 				}
 			case InstructionType::BNot:
 				{
-					Value one = stack.Pop();
-					stack.Push(~one);
+					Value& a = stack.Peek();
+					a = ~a;
 					break;
 				}
 			case InstructionType::LeftShift:
 				{
-					stack.Pop(one);
-					stack.Pop(two);
-					stack.Push(two<<one);
+					const Value& b = stack.Peek();
+					--stack._size;
+					Value& a = stack.Peek();
+					a = a << b;
 					break;
 				}
 			case InstructionType::RightShift:
 				{
-					stack.Pop(one);
-					stack.Pop(two);
-					stack.Push(two>>one);
+					const Value& b = stack.Peek();
+					--stack._size;
+					Value& a = stack.Peek();
+					a = a >> b;
 					break;
 				}
 			case InstructionType::Incr:
 				{
-					stack.Pop(one);
-					stack.Push(one+Value::One);
+					Value& a = stack.Peek();
+					a .Increase();
 					break;
 				}
 			case InstructionType::Decr:
 				{
-					stack.Pop(one);
-					stack.Push(one-Value::One);
+					Value& a = stack.Peek();
+					a.Decrease();
 					break;
 				}
 			case InstructionType::Negate:
 				{
-					stack.Pop(one);
-					stack.Push(-one);
+					Value& a = stack.Peek();
+					a.Negate();
 					break;
 				}
 			case InstructionType::Eq:
 				{
-					stack.Pop(one);
-					stack.Pop(two);
-
-					if (one == two)
-						stack.Push(Value::One);
-					else
-						stack.Push(Value::Zero);
-
+					const Value& b = stack.Peek();
+					--stack._size;
+					Value& a = stack.Peek();
+					a = (a==b) ? Value::One : Value::Zero;
 					break;
 				}
 			case InstructionType::NotEq:
 				{
-					stack.Pop(one);
-					stack.Pop(two);
-
-					if (one == two)
-						stack.Push(Value::Zero);
-					else
-						stack.Push(Value::One);
-
+					const Value& b = stack.Peek();
+					--stack._size;
+					Value& a = stack.Peek();
+					a = (a==b) ? Value::Zero : Value::One;
 					break;
 				}
 			case InstructionType::Lt:
 				{
-					stack.Pop(one);
-					stack.Pop(two);
-
-					if ((double)one > (double)two)
-						stack.Push(Value::One);
-					else
-						stack.Push(Value::Zero);
-
+					const Value& b = stack.Peek();
+					--stack._size;
+					Value& a = stack.Peek();
+					a = (a.int_value < b.int_value) ? Value::One : Value::Zero;
 					break;
 				}
 			case InstructionType::Gt:
 				{
-					stack.Pop(one);
-					stack.Pop(two);
-
-					if ((double)one < (double)two)
-						stack.Push(Value::One);
-					else
-						stack.Push(Value::Zero);
-
+					const Value& b = stack.Peek();
+					--stack._size;
+					Value& a = stack.Peek();
+					a = (a.int_value > b.int_value) ? Value::One : Value::Zero;
 					break;
 				}
 			case InstructionType::GtE:
 				{
-					stack.Pop(one);
-					stack.Pop(two);
-
-					if ((double)one <= (double)two)
-						stack.Push(Value::One);
-					else
-						stack.Push(Value::Zero);
+					const Value& b = stack.Peek();
+					--stack._size;
+					Value& a = stack.Peek();
+					a = (a.int_value >= b.int_value) ? Value::One : Value::Zero;
 
 					break;
 				}
 			case InstructionType::LtE:
 				{
-					stack.Pop(one);
-					stack.Pop(two);
-
-					if ((double)one >= (double)two)
-						stack.Push(Value::One);
-					else
-						stack.Push(Value::Zero);
-
+					const Value& b = stack.Peek();
+					--stack._size;
+					Value& a = stack.Peek();
+					a = (a.int_value <= b.int_value) ? Value::One : Value::Zero;
 					break;
 				}
 			case InstructionType::LdNull:
@@ -1093,8 +1080,6 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					default:
 						iptr = in.value-1;
 					}
-					//if ((int)temp)
-					//	iptr = in.value-1;
 					break;
 				}
 			case InstructionType::JumpFalse:
@@ -1114,8 +1099,6 @@ Value JetContext::Execute(int iptr, Closure* frame)
 						iptr = in.value-1;
 						break;
 					}
-					//if (!(int)temp)
-					//iptr = in.value-1;
 					break;
 				}
 			case InstructionType::JumpFalsePeek:
@@ -1144,8 +1127,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 				}
 			case InstructionType::Store:
 				{
-					stack.Pop(temp);
-					vars[in.value] = temp;
+					stack.Pop(vars[in.value]);
 					break;
 				}
 			case InstructionType::LLoad:

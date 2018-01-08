@@ -121,11 +121,11 @@ void CTest()
 	INT64 start, end, rate;
 	QueryPerformanceFrequency((LARGE_INTEGER *)&rate);
 	QueryPerformanceCounter((LARGE_INTEGER *)&start);
-	fibo(34);
+	auto v=fibo(34);
 	QueryPerformanceCounter((LARGE_INTEGER *)&end);
 	INT64 diff = end - start;
 	double dt = ((double)diff) / ((double)rate);
-	printf("C”Ô—‘∫ƒ ±: %lf √Î\n", dt);
+	printf("%I64d,C”Ô—‘∫ƒ ±: %lf √Î\n",v, dt);
 }
 
 int main(int argc, char* argv[])
