@@ -109,5 +109,13 @@ namespace Jet
 			return _size;
 		}
 	};
+
+	// use macro to avoid function call
+#define vmstack_peek(stack) stack._data[stack._size - 1]
+#define vmstack_peekn(stack,n) stack._data[stack._size - n]
+#define vmstack_pop(stack) --stack._size
+#define vmstack_popn(stack,n) stack._size-=n
+#define vmstack_push(stack,v) stack._data[stack._size++] = v
+#define vmstack_push_top(stack) stack._data[stack._size++] = stack._data[stack._size - 1];
 }
 #endif

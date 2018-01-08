@@ -364,6 +364,9 @@ namespace Jet
 		friend class JetContext;
 	};
 
+// use macro to avoid function call
+#define set_value_bool(v,b)	v.type=ValueType::Int;v.int_value=b?1:0;
+
 	struct Capture
 	{
 		//garbage collector header

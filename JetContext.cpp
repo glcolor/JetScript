@@ -848,193 +848,190 @@ Value JetContext::Execute(int iptr, Closure* frame)
 	QueryPerformanceCounter( (LARGE_INTEGER *)&start );
 #endif
 	//frame and stack pointer reset
-	unsigned int startcallstack = this->callstack.size();
-	unsigned int startstack = this->stack.size();
+	unsigned int startcallstack = this->callstack._size;
+	unsigned int startstack = this->stack._size;
 	auto startlocalstack = this->sptr;
 
-	callstack.Push(std::pair<unsigned int, Closure*>(JET_BAD_INSTRUCTION, 0));//bad value to get it to return;
+	vmstack_push(callstack,(std::pair<unsigned int, Closure*>(JET_BAD_INSTRUCTION, nullptr)));//bad value to get it to return;
 	curframe = frame;
-
-	Value one, two,temp;
 
 	try
 	{
 		while (curframe && iptr < (int)curframe->prototype->instructions.size() && iptr >= 0)
 		{
-			Instruction in = curframe->prototype->instructions[iptr];
+			const Instruction& in = curframe->prototype->instructions[iptr];
 			switch(in.instruction)
 			{
 			case InstructionType::Add:
 				{
-					const Value& b = stack.Peek();
+					const Value& b = vmstack_peek(stack);
 					--stack._size;
-					Value& a = stack.Peek();
+					Value& a = vmstack_peek(stack);
 					a += b;
 					break;
 				}
 			case InstructionType::Sub:
 				{
-					const Value& b = stack.Peek();
+					const Value& b = vmstack_peek(stack);
 					--stack._size;
-					Value& a = stack.Peek();
+					Value& a = vmstack_peek(stack);
 					a -= b;
 					break;
 				}
 			case InstructionType::Mul:
 				{
-					const Value& b = stack.Peek();
+					const Value& b = vmstack_peek(stack);
 					--stack._size;
-					Value& a = stack.Peek();
+					Value& a = vmstack_peek(stack);
 					a *=b;
 					break;
 				}
 			case InstructionType::Div:
 				{
-					const Value& b = stack.Peek();
+					const Value& b = vmstack_peek(stack);
 					--stack._size;
-					Value& a = stack.Peek();
+					Value& a = vmstack_peek(stack);
 					a /= b;
 					break;
 				}
 			case InstructionType::Modulus:
 				{
-					const Value& b = stack.Peek();
+					const Value& b = vmstack_peek(stack);
 					--stack._size;
-					Value& a = stack.Peek();
+					Value& a = vmstack_peek(stack);
 					a %=b;
 					break;
 				}
 			case InstructionType::BAnd:
 				{
-					const Value& b = stack.Peek();
+					const Value& b = vmstack_peek(stack);
 					--stack._size;
-					Value& a = stack.Peek();
+					Value& a = vmstack_peek(stack);
 					a &= b;
 					break;
 				}
 			case InstructionType::BOr:
 				{
-					const Value& b = stack.Peek();
+					const Value& b = vmstack_peek(stack);
 					--stack._size;
-					Value& a = stack.Peek();
+					Value& a = vmstack_peek(stack);
 					a |= b;
 					break;
 				}
 			case InstructionType::Xor:
 				{
-					const Value& b = stack.Peek();
+					const Value& b = vmstack_peek(stack);
 					--stack._size;
-					Value& a = stack.Peek();
+					Value& a = vmstack_peek(stack);
 					a^=b;
 					break;
 				}
 			case InstructionType::BNot:
 				{
-					Value& a = stack.Peek();
+					Value& a = vmstack_peek(stack);
 					a = ~a;
 					break;
 				}
 			case InstructionType::LeftShift:
 				{
-					const Value& b = stack.Peek();
+					const Value& b = vmstack_peek(stack);
 					--stack._size;
-					Value& a = stack.Peek();
+					Value& a = vmstack_peek(stack);
 					a <<= b;
 					break;
 				}
 			case InstructionType::RightShift:
 				{
-					const Value& b = stack.Peek();
+					const Value& b = vmstack_peek(stack);
 					--stack._size;
-					Value& a = stack.Peek();
+					Value& a = vmstack_peek(stack);
 					a >>= b;
 					break;
 				}
 			case InstructionType::Incr:
 				{
-					Value& a = stack.Peek();
+					Value& a = vmstack_peek(stack);
 					a .Increase();
 					break;
 				}
 			case InstructionType::Decr:
 				{
-					Value& a = stack.Peek();
+					Value& a = vmstack_peek(stack);
 					a.Decrease();
 					break;
 				}
 			case InstructionType::Negate:
 				{
-					Value& a = stack.Peek();
+					Value& a = vmstack_peek(stack);
 					a.Negate();
 					break;
 				}
 			case InstructionType::Eq:
 				{
-					const Value& b = stack.Peek();
+					const Value& b = vmstack_peek(stack);
 					--stack._size;
-					Value& a = stack.Peek();
-					a.SetBool(a == b);
+					Value& a = vmstack_peek(stack);
+					set_value_bool(a, a == b);
 					break;
 				}
 			case InstructionType::NotEq:
 				{
-					const Value& b = stack.Peek();
+					const Value& b = vmstack_peek(stack);
 					--stack._size;
-					Value& a = stack.Peek();
-					a.SetBool(!(a == b));
+					Value& a = vmstack_peek(stack);
+					set_value_bool(a, !(a == b));
 					break;
 				}
 			case InstructionType::Lt:
 				{
-					const Value& b = stack.Peek();
+					const Value& b = vmstack_peek(stack);
 					--stack._size;
-					Value& a = stack.Peek();
-					a.SetBool(a.int_value < b.int_value);
+					Value& a = vmstack_peek(stack);
+					set_value_bool(a, a.int_value < b.int_value);
 					break;
 				}
 			case InstructionType::Gt:
 				{
-					const Value& b = stack.Peek();
+					const Value& b = vmstack_peek(stack);
 					--stack._size;
-					Value& a = stack.Peek();
-					a.SetBool(a.int_value > b.int_value);
+					Value& a = vmstack_peek(stack);
+					set_value_bool(a, a.int_value > b.int_value);
 					break;
 				}
 			case InstructionType::GtE:
 				{
-					const Value& b = stack.Peek();
+					const Value& b = vmstack_peek(stack);
 					--stack._size;
-					Value& a = stack.Peek();
-					a.SetBool(a.int_value >= b.int_value);
-
+					Value& a = vmstack_peek(stack);
+					set_value_bool(a, a.int_value >= b.int_value);
 					break;
 				}
 			case InstructionType::LtE:
 				{
-					const Value& b = stack.Peek();
+					const Value& b = vmstack_peek(stack);
 					--stack._size;
-					Value& a = stack.Peek();
-					a.SetBool(a.int_value <= b.int_value);
+					Value& a = vmstack_peek(stack);
+					set_value_bool(a, a.int_value <= b.int_value);
 					break;
 				}
 			case InstructionType::LdNull:
 				{
-					stack.Push(Value::Empty);
+					vmstack_push(stack,Value::Empty);
 					break;
 				}
 			case InstructionType::LdInt:
 				{
-					stack.Push(in.int_lit);
+					vmstack_push(stack, in.int_lit);
 					break;
 				}
 			case InstructionType::LdReal:
 			{
-				stack.Push(in.lit);
+				vmstack_push(stack, in.lit);
 				break;
 			}
 			case InstructionType::LdStr:
 				{
-					stack.Push(Value(in.strlit));
+					vmstack_push(stack, Value(in.strlit));
 					break;
 				}
 			case InstructionType::Jump:
@@ -1044,7 +1041,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 				}
 			case InstructionType::JumpTrue:
 				{
-					stack.Pop(temp);
+					const auto& temp= vmstack_peek(stack);
 					switch (temp.type)
 					{
 					case ValueType::Int:
@@ -1060,11 +1057,12 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					default:
 						iptr = in.value-1;
 					}
+					vmstack_pop(stack);
 					break;
 				}
 			case InstructionType::JumpTruePeek:
 				{
-					const auto& temp = stack.Peek();
+					const auto& temp = vmstack_peek(stack);
 					switch (temp.type)
 					{
 					case ValueType::Int:
@@ -1084,7 +1082,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 				}
 			case InstructionType::JumpFalse:
 				{
-					stack.Pop(temp);
+					const auto&  temp = vmstack_peek(stack);
 					switch (temp.type)
 					{
 					case ValueType::Int:
@@ -1099,11 +1097,12 @@ Value JetContext::Execute(int iptr, Closure* frame)
 						iptr = in.value-1;
 						break;
 					}
+					vmstack_pop(stack);
 					break;
 				}
 			case InstructionType::JumpFalsePeek:
 				{
-					const auto& temp = stack.Peek();
+					const auto& temp = vmstack_peek(stack);
 					switch (temp.type)
 					{
 					case ValueType::Int:
@@ -1122,7 +1121,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 				}
 			case InstructionType::Load:
 				{
-					stack.Push(vars[in.value]);
+					vmstack_push(stack,(vars[in.value]));
 					break;
 				}
 			case InstructionType::Store:
@@ -1132,7 +1131,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 				}
 			case InstructionType::LLoad:
 				{
-					stack.Push(sptr[in.value]);
+					vmstack_push(stack, (sptr[in.value]));
 					break;
 				}
 			case InstructionType::LStore:
@@ -1147,7 +1146,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					while ( index++ < 0)
 						frame = frame->prev;
 
-					stack.Push(*frame->upvals[in.value]->v);
+					vmstack_push(stack, (*frame->upvals[in.value]->v));
 					break;
 				}
 			case InstructionType::CStore:
@@ -1204,7 +1203,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					closure->prototype = in.func;
 					closure->type = ValueType::Function;
 					gc.AddObject((GarbageCollector::gcval*)closure);
-					stack.Push(Value(closure));
+					vmstack_push(stack, Value(closure));
 
 					if (gc.allocationCounter++%GC_INTERVAL == 0)
 						this->RunGC();
@@ -1217,7 +1216,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					auto frame = lastadded;
 					//first see if we already have this closure open for this variable
 					bool found = false;
-					for (auto ii: opencaptures)
+					for (auto& ii: opencaptures)
 					{
 						if (ii.capture->v == &sptr[in.value])
 						{
@@ -1311,13 +1310,14 @@ Value JetContext::Execute(int iptr, Closure* frame)
 			case InstructionType::ECall:
 				{
 					//allocate capture area here
+					Value one;
 					stack.Pop(one);
 					iptr = this->Call(&one, iptr, in.value);
 					break;
 				}
 			case InstructionType::Return:
 				{
-					auto oframe = callstack.Pop();
+					auto& oframe = vmstack_peek(callstack);
 					iptr = oframe.first;
 					if (curframe && curframe->generator)
 						curframe->generator->Kill();
@@ -1337,7 +1337,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					}
 					//m_OutputFunction("Return: Stack Ptr At: %d\n", sptr - localstack);
 					curframe = oframe.second;
-
+					vmstack_pop(callstack);
 					break;
 				}
 			case InstructionType::Yield:
@@ -1362,7 +1362,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					if (v.type != ValueType::Function || v._function->generator == 0)
 						throw RuntimeException("Cannot resume a non generator!");
 
-					callstack.Push(std::pair<unsigned int, Closure*>(iptr, curframe));
+					vmstack_push(callstack,(std::pair<unsigned int, Closure*>(iptr, curframe)));
 
 					sptr += curframe->prototype->locals;
 
@@ -1377,26 +1377,26 @@ Value JetContext::Execute(int iptr, Closure* frame)
 				}
 			case InstructionType::Dup:
 				{
-					stack.Push(stack.Peek());
+					vmstack_push_top(stack);
 					break;
 				}
 			case InstructionType::Pop:
 				{
-					stack.Pop();
+					vmstack_pop(stack);
 					break;
 				}
 			case InstructionType::StoreAt:
 				{
 					if (in.string)
 					{
-						Value loc = stack.Pop();
-						Value val = stack.Pop();	
+						Value& loc = vmstack_peek(stack);
+						Value& val = vmstack_peekn(stack,2);
 
 						if (loc.type == ValueType::Object)
 							(*loc._object)[in.string] = val;
 						else
 							throw RuntimeException("Could not index a non array/object value!");
-
+						vmstack_popn(stack,2);
 						//this may be redundant and already done in object
 						//check me
 						if (loc._object->mark)
@@ -1409,9 +1409,9 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					}
 					else
 					{
-						Value index = stack.Pop();
-						Value loc = stack.Pop();
-						Value val = stack.Pop();	
+						Value& index = vmstack_peekn(stack,1);
+						Value& loc = vmstack_peekn(stack,2);
+						Value& val = vmstack_peekn(stack,3);	
 
 						if (loc.type == ValueType::Array)
 						{
@@ -1453,7 +1453,10 @@ Value JetContext::Execute(int iptr, Closure* frame)
 							loc._string->data[in] = (int)val;
 						}
 						else
+						{
 							throw RuntimeException("Could not index a non array/object value!");
+						}
+						vmstack_popn(stack, 3);
 					}
 					break;
 				}
@@ -1461,13 +1464,14 @@ Value JetContext::Execute(int iptr, Closure* frame)
 				{
 					if (in.string)
 					{
-						Value loc = stack.Pop();
+						Value loc;
+						stack.Pop(loc);
 						if (loc.type == ValueType::Object)
 						{
 							auto n = loc._object->findNode(in.string);
 							if (n)
 							{
-								stack.Push(n->second);
+								vmstack_push(stack, n->second);
 							}
 							else
 							{
@@ -1477,7 +1481,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 									n = obj->findNode(in.string);
 									if (n)
 									{
-										stack.Push(n->second);
+										vmstack_push(stack, n->second);
 										break;
 									}
 									obj = obj->prototype;
@@ -1485,13 +1489,13 @@ Value JetContext::Execute(int iptr, Closure* frame)
 							}
 						}
 						else if (loc.type == ValueType::String)
-							stack.Push((*this->string)[in.string]);
+							vmstack_push(stack, ((*this->string)[in.string]));
 						else if (loc.type == ValueType::Array)
-							stack.Push((*this->Array)[in.string]);
+							vmstack_push(stack, ((*this->Array)[in.string]));
 						else if (loc.type == ValueType::Userdata)
-							stack.Push((*loc._userdata->prototype)[in.string]);
+							vmstack_push(stack, ((*loc._userdata->prototype)[in.string]));
 						else if (loc.type == ValueType::Function && loc._function->prototype->generator)
-							stack.Push((*this->function)[in.string]);
+							vmstack_push(stack, ((*this->function)[in.string]));
 						else
 							throw RuntimeException("Could not index a non array/object value!");
 					}
@@ -1505,17 +1509,17 @@ Value JetContext::Execute(int iptr, Closure* frame)
 							int in = (int)index;
 							if (in >= (int)loc._array->data.size() || in < 0)
 								throw RuntimeException("Array index out of range!");
-							stack.Push(loc._array->data[in]);
+							vmstack_push(stack, (loc._array->data[in]));
 						}
 						else if (loc.type == ValueType::Object)
-							stack.Push((*loc._object).get(index));
+							vmstack_push(stack,((*loc._object).get(index)));
 						else if (loc.type == ValueType::String)
 						{
 							int in = (int)index;
 							if (in >= (int)loc.length || in < 0)
 								throw RuntimeException("String index out of range!");
 
-							stack.Push(Value(loc._string->data[in]));
+							vmstack_push(stack, Value(loc._string->data[in]));
 						}
 
 						else
@@ -1525,7 +1529,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 				}
 			case InstructionType::NewArray:
 				{
-					auto arr = new JetArray;//GCVal<std::vector<Value>>();
+					auto arr = new JetArray();//GCVal<std::vector<Value>>();
 					arr->grey = arr->mark = false;
 					arr->refcount = 0;
 					arr->context = this;
@@ -1534,7 +1538,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					arr->data.resize(in.value);
 					for (int i = in.value-1; i >= 0; i--)
 						stack.Pop(arr->data[i]);
-					stack.Push(Value(arr));
+					vmstack_push(stack,(Value(arr)));
 
 					if (gc.allocationCounter++%GC_INTERVAL == 0)
 						this->RunGC();
@@ -1548,14 +1552,14 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					obj->refcount = 0;
 					obj->type = ValueType::Object;
 					this->gc.gen1.push_back((GarbageCollector::gcval*)obj);
-					Value key, value;
 					for (int i = in.value-1; i >= 0; i--)
 					{
-						stack.Pop(value);
-						stack.Pop(key);
+						const auto& value = vmstack_peek(stack);
+						const auto& key = vmstack_peekn(stack,2);
 						(*obj)[key] = value;
+						vmstack_popn(stack,2);
 					}
-					stack.Push(Value(obj));
+					vmstack_push(stack,Value(obj));
 
 					if (gc.allocationCounter++%GC_INTERVAL == 0)
 						this->RunGC();

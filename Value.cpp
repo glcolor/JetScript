@@ -1418,15 +1418,23 @@ void Jet::Value::Negate()
 	{
 		case ValueType::Int:
 			int_value = -int_value;
+			return;
 		case ValueType::Real:
 			value = -value;
+			return;
 		case ValueType::Userdata:
 			if (this->_userdata->prototype)
+			{
 				this->CallMetamethod(this->_userdata->prototype, "_neg", 0);
+				return;
+			}
 			break;
 		case ValueType::Object:
 			if (this->_object->prototype)
+			{
 				this->CallMetamethod("_neg", 0);
+				return;
+			}
 			break;
 	}
 
@@ -1439,15 +1447,23 @@ void Jet::Value::Increase()
 	{
 		case ValueType::Int:
 			++int_value;
+			return;
 		case ValueType::Real:
 			++value;
+			return;
 		case ValueType::Userdata:
 			if (this->_userdata->prototype)
+			{
 				this->CallMetamethod(this->_userdata->prototype, "_incr", 0);
+				return;
+			}
 			break;
 		case ValueType::Object:
 			if (this->_object->prototype)
+			{
 				this->CallMetamethod("_incr", 0);
+				return;
+			}
 			break;
 	}
 
@@ -1458,18 +1474,30 @@ void Jet::Value::Decrease()
 {
 	switch (this->type)
 	{
-		case ValueType::Int:
-			--int_value;
-		case ValueType::Real:
-			--value;
-		case ValueType::Userdata:
-			if (this->_userdata->prototype)
-				this->CallMetamethod(this->_userdata->prototype, "_decr", 0);
-			break;
-		case ValueType::Object:
-			if (this->_object->prototype)
-				this->CallMetamethod("_decr", 0);
-			break;
+	case ValueType::Int:
+	{
+		--int_value;
+		return;
+	}
+	case ValueType::Real:
+	{
+		--value;
+		return;
+	}
+	case ValueType::Userdata:
+		if (this->_userdata->prototype)
+		{
+			this->CallMetamethod(this->_userdata->prototype, "_decr", 0);
+			return;
+		}
+		break;
+	case ValueType::Object:
+		if (this->_object->prototype)
+		{
+			this->CallMetamethod("_decr", 0);
+			return;
+		}
+		break;
 	}
 
 	throw RuntimeException("Cannot decr non-numeric type! " + (std::string)ValueTypes[(int)this->type]);
