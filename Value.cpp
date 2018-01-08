@@ -840,6 +840,536 @@ Value Value::operator>>( const Value &other )
 	throw RuntimeException("Cannot right-shift two non-numeric types! " + (std::string)ValueTypes[(int)this->type] + " and " + (std::string)ValueTypes[(int)other.type]);
 };
 
+
+void Value::operator+=(const Value &other)
+{
+	switch (this->type)
+	{
+		case ValueType::Int:
+		{
+			switch (other.type)
+			{
+				case ValueType::Real:
+				{
+					type = ValueType::Real;
+					value = (double)int_value + other.value;
+					return;
+				}
+				case ValueType::Int:
+				{
+					int_value += other.int_value;
+					return;
+				}
+				case ValueType::String:
+				{
+					if (other._string->context == nullptr) return;
+					std::string str = this->ToString() + std::string(other._string->data);
+					type = ValueType::String;
+					*this = other._string->context->NewString(str.c_str(), true);
+					return;
+				}
+			}
+			break;
+		}
+		case ValueType::Real:
+		{
+			switch (other.type)
+			{
+				case ValueType::Real:
+				{
+					value += other.value;
+					break;
+				}
+				case ValueType::Int:
+				{
+					value += (double)other.int_value;
+					return;
+				}
+				case ValueType::String:
+				{
+					if (other._string->context == nullptr) return;
+					std::string str = this->ToString() + std::string(other._string->data);
+					*this = other._string->context->NewString(str.c_str(), true);
+					return;
+				}
+			}
+			break;
+		}
+		case ValueType::String:
+		{
+			if (this->_string->context == nullptr) return;
+			std::string str = std::string(this->_string->data) + other.ToString();
+			*this = this->_string->context->NewString(str.c_str(), true);
+			return;
+			break;
+		}
+		case ValueType::Userdata:
+		{
+			if (this->_userdata->prototype)
+			{
+				this->CallMetamethod(this->_userdata->prototype, "_add", &other);
+				return;
+			}
+			break;
+		}
+		case ValueType::Object:
+		{
+			if (this->_object->prototype)
+			{
+				this->CallMetamethod("_add", &other);
+				return;
+			}
+		}
+	}
+
+	throw RuntimeException("Cannot add two non-numeric types! " + (std::string)ValueTypes[(int)this->type] + " and " + (std::string)ValueTypes[(int)other.type]);
+};
+
+void Value::operator-=(const Value &other)
+{
+	switch (this->type)
+	{
+		case ValueType::Int:
+		{
+			if (other.type == ValueType::Real)
+			{
+				type = ValueType::Real;
+				value = (double)int_value - other.value;
+				return;
+			}
+			else if (other.type == ValueType::Int)
+			{
+				int_value -= other.int_value;
+				return;
+			}
+			break;
+		}
+		case ValueType::Real:
+		{
+			if (other.type == ValueType::Real)
+			{
+				value -= other.value;
+				return;
+			}
+			else if (other.type == ValueType::Int)
+			{
+				value -= (double)other.value;
+				return;
+			}
+			break;
+		}
+		case ValueType::Userdata:
+		{
+			if (this->_userdata->prototype)
+			{
+				this->CallMetamethod(this->_userdata->prototype, "_sub", &other);
+				return;
+			}
+			break;
+		}
+		case ValueType::Object:
+		{
+			if (this->_object->prototype)
+			{
+				this->CallMetamethod("_sub", &other);
+				return;
+			}
+			break;
+		}
+	}
+
+	throw RuntimeException("Cannot subtract two non-numeric types! " + (std::string)ValueTypes[(int)this->type] + " and " + (std::string)ValueTypes[(int)other.type]);
+};
+
+void Value::operator*=(const Value &other)
+{
+	switch (this->type)
+	{
+		case ValueType::Int:
+			if (other.type == ValueType::Real)
+			{
+				type = ValueType::Real;
+				value = (double)int_value * other.value;
+				return;
+			}
+			else if (other.type == ValueType::Int)
+			{
+				int_value *= other.int_value;
+				return;
+			}
+			break;
+		case ValueType::Real:
+			if (other.type == ValueType::Real)
+			{
+				value *= other.value;
+				return;
+			}
+			else if (other.type == ValueType::Int)
+			{
+				value *= (double)other.value;
+				return;
+			}
+			break;
+		case ValueType::Userdata:
+			if (this->_userdata->prototype)
+			{
+				this->CallMetamethod(this->_userdata->prototype, "_mul", &other);
+				return;
+			}
+			break;
+		case ValueType::Object:
+			if (this->_object->prototype)
+			{
+				this->CallMetamethod("_mul", &other);
+				return;
+			}
+			break;
+	}
+
+	throw RuntimeException("Cannot multiply two non-numeric types! " + (std::string)ValueTypes[(int)this->type] + " and " + (std::string)ValueTypes[(int)other.type]);
+};
+
+void Value::operator/=(const Value &other)
+{
+	switch (this->type)
+	{
+		case ValueType::Int:
+			if (other.type == ValueType::Real)
+			{
+				type = ValueType::Real;
+				value = (double)int_value/other.value;
+				return;
+			}
+			else if (other.type == ValueType::Int)
+			{
+				int_value /= other.int_value;
+				return;
+			}
+			break;
+		case ValueType::Real:
+			if (other.type == ValueType::Real)
+			{
+				value /=other.value;
+				return;
+			}
+			else if (other.type == ValueType::Int)
+			{
+				value /= (double)other.value;
+				return;
+			}
+			break;
+		case ValueType::Userdata:
+			if (this->_userdata->prototype)
+			{
+				this->CallMetamethod(this->_userdata->prototype, "_div", &other);
+				return;
+			}
+			break;
+		case ValueType::Object:
+			if (this->_object->prototype)
+			{
+				this->CallMetamethod("_div", &other);
+				return;
+			}
+			break;
+	}
+
+	throw RuntimeException("Cannot divide two non-numeric types! " + (std::string)ValueTypes[(int)this->type] + " and " + (std::string)ValueTypes[(int)other.type]);
+};
+
+void Value::operator%=(const Value &other)
+{
+	switch (this->type)
+	{
+		case ValueType::Int:
+			if (other.type == ValueType::Real)
+			{
+				type = ValueType::Real;
+				value = fmod((double)int_value, other.value);
+				return;
+			}
+			else if (other.type == ValueType::Int)
+			{
+				int_value %= other.int_value;
+				return;
+			}
+			break;
+		case ValueType::Real:
+			if (other.type == ValueType::Real)
+			{
+				value = fmod(value,other.value);
+				return;
+			}
+			else if (other.type == ValueType::Int)
+			{
+				value = fmod(value, (double)other.int_value);
+				return;
+			}
+			break;
+		case ValueType::Userdata:
+			if (this->_userdata->prototype)
+			{
+				this->CallMetamethod(this->_userdata->prototype, "_mod", &other);
+				return;
+			}
+			break;
+		case ValueType::Object:
+			if (this->_object->prototype)
+			{
+				this->CallMetamethod("_mod", &other);
+				return;
+			}
+			break;
+	}
+
+	throw RuntimeException("Cannot modulus two non-numeric types! " + (std::string)ValueTypes[(int)this->type] + " and " + (std::string)ValueTypes[(int)other.type]);
+};
+
+void Value::operator|=(const Value &other)
+{
+	switch (this->type)
+	{
+		case ValueType::Int:
+			if (other.type == ValueType::Real)
+			{
+				int_value |= (int64_t)other.value;
+				return;
+			}
+			else if (other.type == ValueType::Int)
+			{
+				int_value |= other.int_value;
+				return;
+			}
+			break;
+		case ValueType::Real:
+			if (other.type == ValueType::Real)
+			{
+				type = ValueType::Int;
+				int_value = (int64_t)value | (int64_t)other.value;
+				return;
+			}
+			else if (other.type == ValueType::Int)
+			{
+				type = ValueType::Int;
+				int_value = (int64_t)value | other.int_value;
+				return;
+			}
+			break;
+		case ValueType::Userdata:
+			if (this->_userdata->prototype)
+			{
+				this->CallMetamethod(this->_userdata->prototype, "_or", &other);
+				return;
+			}
+			break;
+		case ValueType::Object:
+			if (this->_object->prototype)
+			{
+				this->CallMetamethod("_or", &other);
+				return;
+			}
+			break;
+	}
+
+	throw RuntimeException("Cannot binary or two non-numeric types! " + (std::string)ValueTypes[(int)this->type] + " and " + (std::string)ValueTypes[(int)other.type]);
+};
+
+void Value::operator&=(const Value &other)
+{
+	switch (this->type)
+	{
+		case ValueType::Int:
+			if (other.type == ValueType::Real)
+			{
+				int_value &= (int64_t)other.value;
+				return;
+			}
+			else if (other.type == ValueType::Int)
+			{
+				int_value &= other.int_value;
+				return;
+			}
+			break;
+		case ValueType::Real:
+			if (other.type == ValueType::Real)
+			{
+				type = ValueType::Int;
+				int_value = (int64_t)value & (int64_t)other.value;
+				return;
+			}
+			else if (other.type == ValueType::Int)
+			{
+				type = ValueType::Int;
+				int_value = (int64_t)value & other.int_value;
+				return;
+			}
+			break;
+		case ValueType::Userdata:
+			if (this->_userdata->prototype)
+			{
+				this->CallMetamethod(this->_userdata->prototype, "_and", &other);
+				return;
+			}
+			break;
+		case ValueType::Object:
+			if (this->_object->prototype)
+			{
+				this->CallMetamethod("_and", &other);
+				return;
+			}
+			break;
+	}
+
+	throw RuntimeException("Cannot binary and two non-numeric types! " + (std::string)ValueTypes[(int)this->type] + " and " + (std::string)ValueTypes[(int)other.type]);
+};
+
+void Value::operator^=(const Value &other)
+{
+	switch (this->type)
+	{
+		case ValueType::Int:
+			if (other.type == ValueType::Real)
+			{
+				int_value ^= (int64_t)other.value;
+				return;
+			}
+			else if (other.type == ValueType::Int)
+			{
+				int_value ^= other.int_value;
+				return;
+			}
+			break;
+		case ValueType::Real:
+			if (other.type == ValueType::Real)
+			{
+				type = ValueType::Int;
+				int_value = (int64_t)value ^ (int64_t)other.value;
+				return;
+			}
+			else if (other.type == ValueType::Int)
+			{
+				type = ValueType::Int;
+				int_value = (int64_t)value ^ other.int_value;
+				return;
+			}
+			break;
+		case ValueType::Userdata:
+			if (this->_userdata->prototype)
+			{
+				this->CallMetamethod(this->_userdata->prototype, "_xor", &other);
+				return;
+			}
+			break;
+		case ValueType::Object:
+			if (this->_object->prototype)
+			{
+				this->CallMetamethod("_xor", &other);
+				return;
+			}
+			break;
+	}
+
+	throw RuntimeException("Cannot xor two non-numeric types! " + (std::string)ValueTypes[(int)this->type] + " and " + (std::string)ValueTypes[(int)other.type]);
+};
+
+void Value::operator<<=(const Value &other)
+{
+	switch (this->type)
+	{
+		case ValueType::Int:
+			if (other.type == ValueType::Real)
+			{
+				int_value <<= (int64_t)other.value;
+				return;
+			}
+			else if (other.type == ValueType::Int)
+			{
+				int_value <<= other.int_value;
+				return;
+			}
+			break;
+		case ValueType::Real:
+			if (other.type == ValueType::Real)
+			{
+				type = ValueType::Int;
+				int_value = (int64_t)value << (int64_t)other.value;
+				return;
+			}
+			else if (other.type == ValueType::Int)
+			{
+				type = ValueType::Int;
+				int_value = (int64_t)value << other.int_value;
+				return;
+			}
+			break;
+		case ValueType::Userdata:
+			if (this->_userdata->prototype)
+			{
+				this->CallMetamethod(this->_userdata->prototype, "_ls", &other);
+				return;
+			}
+			break;
+		case ValueType::Object:
+			if (this->_object->prototype)
+			{
+				this->CallMetamethod("_ls", &other);
+				return;
+			}
+			break;
+	}
+
+	throw RuntimeException("Cannot left-shift two non-numeric types! " + (std::string)ValueTypes[(int)this->type] + " and " + (std::string)ValueTypes[(int)other.type]);
+};
+
+void Value::operator>>=(const Value &other)
+{
+	switch (this->type)
+	{
+		case ValueType::Int:
+			if (other.type == ValueType::Real)
+			{
+				int_value >>= (int64_t)other.value;
+				return;
+			}
+			else if (other.type == ValueType::Int)
+			{
+				int_value >>= other.int_value;
+				return;
+			}
+			break;
+		case ValueType::Real:
+			if (other.type == ValueType::Real)
+			{
+				type = ValueType::Int;
+				int_value=(int64_t)value >> (int64_t)other.value;
+				return;
+			}
+			else if (other.type == ValueType::Int)
+			{
+				type = ValueType::Int;
+				int_value = (int64_t)value >> other.int_value;
+				return;
+			}
+			break;
+		case ValueType::Userdata:
+			if (this->_userdata->prototype)
+			{
+				this->CallMetamethod(this->_userdata->prototype, "_rs", &other);
+				return;
+			}
+			break;
+		case ValueType::Object:
+			if (this->_object->prototype)
+			{
+				this->CallMetamethod("_rs", &other);
+				return;
+			}
+			break;
+	}
+
+	throw RuntimeException("Cannot right-shift two non-numeric types! " + (std::string)ValueTypes[(int)this->type] + " and " + (std::string)ValueTypes[(int)other.type]);
+};
+
 Value Value::operator~()
 {
 	switch(this->type)

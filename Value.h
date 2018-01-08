@@ -329,6 +329,17 @@ namespace Jet
 		Value operator<<( const Value &other );
 		Value operator>>( const Value &other );
 
+		void operator+=(const Value &other);
+		void operator-=(const Value &other);
+		void operator*=(const Value &other);
+		void operator/=(const Value &other);
+		void operator%=(const Value &other);
+		void operator|=(const Value &other);
+		void operator&=(const Value &other);
+		void operator^=(const Value &other);
+		void operator<<=(const Value &other);
+		void operator>>=(const Value &other);
+
 		//unary operators
 		Value operator~();
 		Value operator-();

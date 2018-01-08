@@ -39,9 +39,14 @@ catch (CompilerException e)
 ```
 
 ### Types
-- Numbers
+- Integers
 ```cpp
 number = 256;
+number = 3;
+```
+- Float Numbers
+```cpp
+number = 1.0;
 number = 3.1415926535895;
 ```
 - Strings
@@ -52,7 +57,7 @@ string = "hello";
 ```cpp
 //how to define objects
 obj = {};
-obj2 = { hey = 1, apple = 2 };
+obj2 = { hey = 1, apple = 2, "name":"value" };
 //two different ways to index items in the object
 obj.apple = 2;
 obj["apple2"] = 3;

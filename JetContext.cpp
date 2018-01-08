@@ -869,7 +869,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					const Value& b = stack.Peek();
 					--stack._size;
 					Value& a = stack.Peek();
-					a = a + b;
+					a += b;
 					break;
 				}
 			case InstructionType::Sub:
@@ -877,7 +877,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					const Value& b = stack.Peek();
 					--stack._size;
 					Value& a = stack.Peek();
-					a = a - b;
+					a -= b;
 					break;
 				}
 			case InstructionType::Mul:
@@ -885,7 +885,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					const Value& b = stack.Peek();
 					--stack._size;
 					Value& a = stack.Peek();
-					a = a * b;
+					a *=b;
 					break;
 				}
 			case InstructionType::Div:
@@ -893,7 +893,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					const Value& b = stack.Peek();
 					--stack._size;
 					Value& a = stack.Peek();
-					a = a / b;
+					a /= b;
 					break;
 				}
 			case InstructionType::Modulus:
@@ -901,7 +901,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					const Value& b = stack.Peek();
 					--stack._size;
 					Value& a = stack.Peek();
-					a = a % b;
+					a %=b;
 					break;
 				}
 			case InstructionType::BAnd:
@@ -909,7 +909,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					const Value& b = stack.Peek();
 					--stack._size;
 					Value& a = stack.Peek();
-					a = a & b;
+					a &= b;
 					break;
 				}
 			case InstructionType::BOr:
@@ -917,7 +917,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					const Value& b = stack.Peek();
 					--stack._size;
 					Value& a = stack.Peek();
-					a = a | b;
+					a |= b;
 					break;
 				}
 			case InstructionType::Xor:
@@ -925,7 +925,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					const Value& b = stack.Peek();
 					--stack._size;
 					Value& a = stack.Peek();
-					a = a ^ b;
+					a^=b;
 					break;
 				}
 			case InstructionType::BNot:
@@ -939,7 +939,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					const Value& b = stack.Peek();
 					--stack._size;
 					Value& a = stack.Peek();
-					a = a << b;
+					a <<= b;
 					break;
 				}
 			case InstructionType::RightShift:
@@ -947,7 +947,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					const Value& b = stack.Peek();
 					--stack._size;
 					Value& a = stack.Peek();
-					a = a >> b;
+					a >>= b;
 					break;
 				}
 			case InstructionType::Incr:
@@ -973,7 +973,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					const Value& b = stack.Peek();
 					--stack._size;
 					Value& a = stack.Peek();
-					a = (a==b) ? Value::One : Value::Zero;
+					a.SetBool(a == b);
 					break;
 				}
 			case InstructionType::NotEq:
@@ -981,7 +981,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					const Value& b = stack.Peek();
 					--stack._size;
 					Value& a = stack.Peek();
-					a = (a==b) ? Value::Zero : Value::One;
+					a.SetBool(!(a == b));
 					break;
 				}
 			case InstructionType::Lt:
@@ -989,7 +989,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					const Value& b = stack.Peek();
 					--stack._size;
 					Value& a = stack.Peek();
-					a = (a.int_value < b.int_value) ? Value::One : Value::Zero;
+					a.SetBool(a.int_value < b.int_value);
 					break;
 				}
 			case InstructionType::Gt:
@@ -997,7 +997,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					const Value& b = stack.Peek();
 					--stack._size;
 					Value& a = stack.Peek();
-					a = (a.int_value > b.int_value) ? Value::One : Value::Zero;
+					a.SetBool(a.int_value > b.int_value);
 					break;
 				}
 			case InstructionType::GtE:
@@ -1005,7 +1005,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					const Value& b = stack.Peek();
 					--stack._size;
 					Value& a = stack.Peek();
-					a = (a.int_value >= b.int_value) ? Value::One : Value::Zero;
+					a.SetBool(a.int_value >= b.int_value);
 
 					break;
 				}
@@ -1014,7 +1014,7 @@ Value JetContext::Execute(int iptr, Closure* frame)
 					const Value& b = stack.Peek();
 					--stack._size;
 					Value& a = stack.Peek();
-					a = (a.int_value <= b.int_value) ? Value::One : Value::Zero;
+					a.SetBool(a.int_value <= b.int_value);
 					break;
 				}
 			case InstructionType::LdNull:
